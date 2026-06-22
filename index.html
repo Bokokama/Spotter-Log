@@ -87,30 +87,6 @@
   }
   .search-input:focus{ border-color:var(--amber); }
 
-  .tabbar{
-    display:flex;
-    gap:8px;
-    flex:1;
-    overflow-x:auto;
-  }
-  .tab{
-    flex-shrink:0;
-    font-family:'Space Mono', monospace;
-    font-size:11px;
-    padding:7px 14px;
-    border-radius:20px;
-    border:1px solid var(--line);
-    background:var(--navy2);
-    color:var(--concrete);
-    cursor:pointer;
-  }
-  .tab.active{
-    background:var(--amber);
-    color:var(--navy);
-    border-color:var(--amber);
-    font-weight:700;
-  }
-
   .backupbar{
     display:flex;
     gap:8px;
@@ -167,12 +143,15 @@
   }
   .card .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
   .card .info{
-    padding:6px 8px;
+    padding:8px;
     display:flex;
     align-items:center;
     gap:8px;
+    justify-content: space-between;
   }
   .card .reg{ font-family:'Space Mono', monospace; color:var(--amber); font-size:13px; }
+  .card .aircraft{ font-family:'Space Mono', monospace; color:var(--white); font-size:12px; }
+  .card .sp-star{ color:var(--amber); font-size:12px; }
 
   .fab{
     position:fixed;
@@ -208,15 +187,17 @@
     max-width:480px;
     padding:18px;
     padding-bottom:28px;
+    max-height: 90vh;
+    overflow-y: auto;
   }
   .modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
-  .modal-header h2{ font-size:13px; color:var(--amber); }
+  .modal-header h2{ font-size:13px; color:var(--amber); text-transform:uppercase; letter-spacing:0.1em; }
   .modal-close{ background:none; border:none; color:var(--concrete); font-size:22px; cursor:pointer; }
   
   .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
   .field{ display:flex; flex-direction:column; gap:5px; }
-  label{ font-size:10px; color:var(--concrete); text-transform:uppercase; }
-  input{
+  label{ font-size:10px; color:var(--concrete); text-transform:uppercase; letter-spacing:0.1em; }
+  input, select, textarea{
     background:var(--navy);
     border:1px solid var(--line);
     border-radius:6px;
@@ -227,6 +208,7 @@
     width:100%;
     outline:none;
   }
+  textarea{ font-family: sans-serif; height: 60px; resize: none; }
 
   .photozone{
     border:1px dashed var(--line);
@@ -236,19 +218,30 @@
     cursor:pointer;
     margin-bottom:14px;
     background:var(--navy);
+    aspect-ratio: 3/2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
   }
-  .photozone img{ width:100%; aspect-ratio:3/2; object-fit:cover; display:block; border-radius:6px; }
+  .photozone img{ width:100%; height:100%; object-fit:cover; display:block; border-radius:6px; }
   .ph-text{ font-family:'Space Mono', monospace; font-size:12px; color:var(--concrete); }
 
+  .toggle-row{ display:flex; align-items:center; gap:8px; margin:12px 0; }
+  .toggle-row input{ width:auto; accent-color:var(--amber); }
+  .toggle-row label{ font-size:12px; text-transform:none; color:var(--white); }
+
   .modal-actions{ display:flex; gap:10px; margin-top:14px; }
-  .modal-actions button{ flex:1; border:none; border-radius:6px; padding:12px; font-weight:900; cursor:pointer; }
+  .modal-actions button{ flex:1; border:none; border-radius:6px; padding:12px; font-weight:900; cursor:pointer; text-transform:uppercase; }
   .modal-actions .save{ background:var(--amber); color:var(--navy); }
   .modal-actions .delete{ background:transparent; color:var(--red); border:1px solid var(--red); }
 
   @media (min-width:768px){
     .grid{ grid-template-columns: repeat(3, 1fr); }
     .modal-overlay{ align-items:center; }
-    .modal{ border-radius:14px; }
+    .modal{ border-radius:14px; max-width: 780px; }
+    .modal-body-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+    .photozone { margin-bottom: 0; }
   }
 </style>
 </head>
@@ -256,7 +249,7 @@
 
 <header>
   <div class="eyebrow">// REGISTRATION COLLECTION LOG</div>
-  <h1>SPOTTER LOG <span style="font-size:12px; color:var(--concrete);">v1.7.1</span></h1>
+  <h1>SPOTTER LOG <span style="font-size:12px; color:var(--concrete);">v1.7.2</span></h1>
   <div class="backup-line" id="backup-line">バックアップ未実施</div>
 </header>
 
@@ -281,14 +274,276 @@
       <button class="modal-close" id="modal-close">×</button>
     </div>
     
-    <div class="photozone" id="photozone">
-      <input type="file" id="m-photo" accept="image/*" style="display:none">
-      <div id="photo-display" class="ph-text">📷 タップして写真を選択</div>
-    </div>
+    <div class="modal-body-layout">
+      <div class="photozone" id="photozone">
+        <input type="file" id="m-photo" accept="image/*" style="display:none">
+        <div id="photo-display" class="ph-text">📷 タップして写真を選択</div>
+      </div>
 
-    <div class="row">
-      <div class="field"><label>Registration</label><input type="text" id="m-reg" placeholder="JA8XXX" autocapitalize="characters"></div>
-      <div class="field"><label>Date</label><input type="date" id="m-date"></div>
+      <div>
+        <div class="row">
+          <div class="field"><label>Registration</label><input type="text" id="m-reg" placeholder="JA8XXX" autocapitalize="characters"></div>
+          <div class="field"><label>Date</label><input type="date" id="m-date"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Airline</label><select id="m-airline"></select></div>
+          <div class="field"><label>Aircraft</label><select id="m-aircraft"></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Airport</label><input type="text" id="m-airport" placeholder="NGS / RJFU"></div>
+          <div class="field"><label>Spot</label><input type="text" id="m-spot" placeholder="展望台など"></div>
+        </div>
+        <div class="field" style="margin-bottom:10px;"><label>Notes</label><textarea id="m-notes"></textarea></div>
+        <div class="toggle-row"><input type="checkbox" id="m-special"><label for="m-special">★ スペマ</label></div>
+        
+        <div class="modal-actions">
+          <button class="delete" id="modal-delete" style="display:none;">削除</button>
+          <button class="save" id="modal-save">Save</button>
+        </div>
+      </div>
     </div>
-    <div class="modal-actions">
-      <button class="delete" id="modal-delete" style="display
+  </div>
+</div>
+
+<script>
+/* ================= データ定義 ＆ IndexedDB ================= */
+const AIRLINES = ['ANA','JAL','ORC','SKY','JJP','APJ','SNA','SFJ','FDA','JAC','AMX','ADO','IBX'];
+const ALL_AIRCRAFT = ['B738','A20N','A21N','DH8D','B763','B772','B77W','B788','B789','B78X','A359','A35K','E170','E190','AT46','AT76','CRJ7'].sort();
+
+let entries = [];
+let editingId = null;
+let currentPhotoBase64 = null;
+
+const DB_NAME = 'spotterlog-db-v1.7';
+const STORE_NAME = 'entries';
+
+// セレクトボックスの初期生成
+const airSelect = document.getElementById('m-airline');
+airSelect.innerHTML = '<option value="">選択指定なし</option>' + AIRLINES.map(a => `<option value="${a}">${a}</option>`).join('');
+const acSelect = document.getElementById('m-aircraft');
+acSelect.innerHTML = '<option value="">選択指定なし</option>' + ALL_AIRCRAFT.map(a => `<option value="${a}">${a}</option>`).join('');
+
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const req = indexedDB.open(DB_NAME, 2);
+    req.onupgradeneeded = (e)=> {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, {keyPath:'id'});
+    };
+    req.onsuccess = ()=> res(req.result); req.onerror = ()=> rej(req.error);
+  });
+}
+
+async function loadData(){
+  try{
+    const db = await idbOpen();
+    entries = await new Promise((res,rej)=>{
+      const req = db.transaction(STORE_NAME,'readonly').objectStore(STORE_NAME).getAll();
+      req.onsuccess = ()=> res(req.result); req.onerror = ()=> rej(req.error);
+    });
+    entries.forEach(e => { if(!e._ts) e._ts = Date.now(); });
+    entries.sort((a,b) => b._ts - a._ts);
+  }catch(e){ entries = []; }
+  render();
+}
+
+async function saveData(){
+  try{
+    const db = await idbOpen();
+    await new Promise((res,rej)=>{
+      const tx = db.transaction(STORE_NAME,'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.clear(); entries.forEach(e=> store.put(e));
+      tx.oncomplete = ()=> res(); tx.onerror = ()=> rej(tx.error);
+    });
+  }catch(e){ console.error(e); }
+}
+
+/* ================= アプリケーション描画 ================= */
+function render() {
+  const grid = document.getElementById('grid'); grid.innerHTML = '';
+  document.getElementById('stats').innerHTML = `<div class="stat"><div class="num">${entries.length}</div><div class="label">TOTAL LOGS</div></div>`;
+  
+  if(entries.length === 0) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1; padding:50px; text-align:center; color:var(--concrete); font-family:'Space Mono';">ログがありません。右下の ＋ から登録してください。</div>`;
+    return;
+  }
+  
+  entries.forEach(e => {
+    const card = document.createElement('div'); card.className = 'card';
+    card.innerHTML = `
+      <div class="thumb">${e.photo ? `<img src="${e.photo}">` : '<span style="font-size:24px;opacity:0.3">✈</span>'}</div>
+      <div class="info">
+        <span class="reg">${e.reg || '—'}</span>
+        <span class="aircraft">${e.aircraft || ''} ${e.special ? '<span class="sp-star">★</span>' : ''}</span>
+      </div>
+    `;
+    card.onclick = () => openModal(e.id);
+    grid.appendChild(card);
+  });
+}
+
+/* ================= モーダル制御 ＆ 画像処理 ================= */
+const modalOverlay = document.getElementById('modal-overlay');
+const photoZone = document.getElementById('photozone');
+const mPhotoInput = document.getElementById('m-photo');
+const photoDisplay = document.getElementById('photo-display');
+
+function openModal(id){
+  editingId = id;
+  const entry = id ? entries.find(e=>e.id===id) : null;
+  
+  document.getElementById('m-reg').value = entry ? entry.reg : '';
+  document.getElementById('m-date').value = entry ? entry.date : new Date().toISOString().slice(0,10);
+  document.getElementById('m-airline').value = entry ? (entry.airline || '') : '';
+  document.getElementById('m-aircraft').value = entry ? (entry.aircraft || '') : '';
+  document.getElementById('m-airport').value = entry ? (entry.airport || '') : '';
+  document.getElementById('m-spot').value = entry ? (entry.spot || '') : '';
+  document.getElementById('m-notes').value = entry ? (entry.notes || '') : '';
+  document.getElementById('m-special').checked = entry ? !!entry.special : false;
+  
+  if(entry && entry.photo) {
+    currentPhotoBase64 = entry.photo;
+    photoDisplay.innerHTML = `<img src="${entry.photo}">`;
+  } else {
+    currentPhotoBase64 = null;
+    photoDisplay.innerHTML = `📷 タップして写真を選択`;
+  }
+  
+  document.getElementById('modal-delete').style.display = entry ? 'block' : 'none';
+  modalOverlay.classList.add('show');
+}
+
+document.getElementById('modal-close').onclick = () => modalOverlay.classList.remove('show');
+photoZone.onclick = (e) => { if(e.target !== mPhotoInput) mPhotoInput.click(); };
+
+mPhotoInput.addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const img = new Image();
+    img.onload = function() {
+      // 3:2に自動切り抜き・リサイズ処理
+      const canvas = document.createElement('canvas');
+      const tw = 900; const th = 600;
+      canvas.width = tw; canvas.height = th;
+      const ctx = canvas.getContext('2d');
+      const aspect = img.width / img.height;
+      let sx, sy, sw, sh;
+      if(aspect > 1.5) { sh = img.height; sw = sh * 1.5; sx = (img.width - sw)/2; sy = 0; }
+      else { sw = img.width; sh = sw / 1.5; sx = 0; sy = (img.height - sh)/2; }
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, tw, th);
+      currentPhotoBase64 = canvas.toDataURL('image/jpeg', 0.85);
+      photoDisplay.innerHTML = `<img src="${currentPhotoBase64}">`;
+    };
+    img.src = evt.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('modal-save').onclick = async () => {
+  const reg = document.getElementById('m-reg').value.trim().toUpperCase();
+  if(!reg) return alert('レジを入力してください');
+  
+  const dataPack = {
+    reg,
+    date: document.getElementById('m-date').value,
+    airline: document.getElementById('m-airline').value,
+    aircraft: document.getElementById('m-aircraft').value,
+    airport: document.getElementById('m-airport').value,
+    spot: document.getElementById('m-spot').value,
+    notes: document.getElementById('m-notes').value,
+    special: document.getElementById('m-special').checked,
+    photo: currentPhotoBase64
+  };
+  
+  if(editingId){
+    const entry = entries.find(e=>e.id===editingId);
+    Object.assign(entry, dataPack);
+  } else {
+    entries.unshift(Object.assign({ id: Date.now() + '-' + Math.random().toString(36).slice(2,5), _ts: Date.now() }, dataPack));
+  }
+  await saveData();
+  modalOverlay.classList.remove('show');
+  render();
+};
+
+document.getElementById('modal-delete').onclick = async () => {
+  if(!confirm('このログを削除しますか？')) return;
+  entries = entries.filter(e => e.id !== editingId);
+  await saveData();
+  modalOverlay.classList.remove('show');
+  render();
+};
+
+document.getElementById('fab').onclick = () => openModal(null);
+
+/* ================= JSON入出力 ================= */
+document.getElementById('export-btn').onclick = () => {
+  const blob = new Blob([JSON.stringify({ app: 'spotter_log_v1.7', entries }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `spotter_log_backup.json`; a.click();
+};
+
+document.getElementById('import-file').addEventListener('change', function(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(evt) {
+    try {
+      const data = JSON.parse(evt.target.result);
+      const imported = data.entries ? data.entries : (Array.isArray(data) ? data : []);
+      if(confirm(`${imported.length}件のログを読み込みます。現データは上書きされます。`)) {
+        entries = imported;
+        entries.forEach(e => { 
+          if(!e.id) e.id = Date.now() + '-' + Math.random().toString(36).slice(2,5);
+          if(!e._ts) e._ts = Date.now();
+        });
+        await saveData(); render();
+        document.getElementById('backup-line').textContent = "バックアップ読み込み完了";
+      }
+    } catch(err) { alert('JSONの解析に失敗しました。'); }
+  };
+  reader.readAsText(file);
+});
+
+/* ================= アプリアイコン＆SW動的処理 ================= */
+const DEFAULT_ICON = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%230B1F30"/><text y="75" x="10" font-size="70" fill="%23FFB627">✈</text></svg>`;
+function updateManifest() {
+  const savedIcon = localStorage.getItem('pwa-app-icon') || DEFAULT_ICON;
+  document.getElementById('favicon').href = savedIcon;
+  const manifestObj = {
+    "short_name": "SPOTTER LOG", "name": "SPOTTER LOG - Aircraft Spotting Diary",
+    "icons": [{ "src": savedIcon, "type": "image/png", "sizes": "512x512" }],
+    "start_url": ".", "background_color": "#02090E", "theme_color": "#0B1F30", "display": "standalone", "orientation": "portrait"
+  };
+  document.getElementById('manifest-link').href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifestObj));
+}
+
+document.getElementById('icon-file').addEventListener('change', function(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas'); const size = 512; canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d'); const side = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
+      localStorage.setItem('pwa-app-icon', canvas.toDataURL('image/png'));
+      updateManifest(); alert('アイコンを設定しました。ホーム画面に再追加すると反映されます。');
+    };
+    img.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+const swCode = `const CACHE_NAME = 'spotter-log-v1.7.2'; self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('activate', (e) => self.clients.claim()); self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));`;
+if ('serviceWorker' in navigator) {
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  navigator.serviceWorker.register(URL.createObjectURL(blob), { scope: './' }).catch(() => {});
+}
+
+updateManifest();
+loadData();
+</script>
+</body>
+</html>
