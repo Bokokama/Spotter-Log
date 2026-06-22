@@ -6,7 +6,8 @@
 <meta name="theme-color" content="#0B1F30">
 <meta name="color-scheme" content="dark">
 <title>SPOTTER LOG</title>
-<link rel="manifest" href="data:application/manifest+json,{%22short_name%22:%22SPOTTER%20LOG%22,%22name%22:%22SPOTTER%20LOG%20-%20Aircraft%20Spotting%20Diary%22,%22start_url%22:%22.%22,%22background_color%22:%22%2302090E%22,%22theme_color%22:%22%230B1F30%22,%22display%22:%22standalone%22,%22orientation%22:%22portrait%22}">
+<link rel="shortcut icon" id="favicon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈</text></svg>">
+<link rel="manifest" id="manifest-link">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -64,7 +65,6 @@
     color:var(--concrete);
     margin-top:8px;
   }
-  .backup-line.warn{ color:var(--red); }
 
   /* Toolbar */
   .toolbar{
@@ -86,71 +86,23 @@
     width:100%;
   }
   .search-input:focus{ border-color:var(--amber); }
-  .search-input::placeholder{ color:#4d6173; }
 
-  /* Search icon toggle */
-  .search-toggle-btn{
-    flex-shrink:0;
-    width:44px; height:44px;
-    border-radius:8px;
-    border:1px solid var(--line);
-    background:var(--navy2);
-    color:var(--white);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-  }
-  .search-toggle-btn svg{ width:24px; height:24px; }
-
-  /* Expanded search box */
-  .search-box{
-    flex:1;
-    position:relative;
-    display:flex;
-    align-items:center;
-  }
-  .search-box .search-input{ padding-right:40px; }
-  .search-clear-btn{
-    position:absolute;
-    right:6px; top:50%;
-    transform:translateY(-50%);
-    width:30px; height:30px;
-    border:none;
-    background:none;
-    color:var(--concrete);
-    font-size:18px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  .search-clear-btn:active{ color:var(--red); }
-
-  /* Sort tab bar */
   .tabbar{
     display:flex;
     gap:8px;
     flex:1;
     overflow-x:auto;
-    min-width:0;
   }
   .tab{
     flex-shrink:0;
     font-family:'Space Mono', monospace;
     font-size:11px;
-    letter-spacing:0.1em;
     padding:7px 14px;
     border-radius:20px;
     border:1px solid var(--line);
     background:var(--navy2);
     color:var(--concrete);
     cursor:pointer;
-    text-transform:uppercase;
-    white-space:nowrap;
-    display:flex;
-    align-items:center;
-    gap:5px;
   }
   .tab.active{
     background:var(--amber);
@@ -158,20 +110,19 @@
     border-color:var(--amber);
     font-weight:700;
   }
-  .tab .dir{ font-size:9px; }
 
   .backupbar{
     display:flex;
     gap:8px;
     margin:0 16px 12px;
+    flex-wrap: wrap;
   }
   .backupbar button, .backupbar label{
     flex:1;
+    min-width: 130px;
     text-align:center;
     font-family:'Space Mono', monospace;
     font-size:11px;
-    letter-spacing:0.12em;
-    text-transform:uppercase;
     padding:9px 8px;
     border-radius:6px;
     border:1px solid var(--line);
@@ -181,7 +132,6 @@
   }
   .backupbar input[type=file]{ display:none; }
 
-  /* Stats strip */
   .stats{
     display:flex;
     gap:1px;
@@ -191,7 +141,7 @@
   }
   .stat{ flex:1; background:var(--navy); padding:10px 8px; text-align:center; }
   .stat .num{ font-family:'Space Mono', monospace; font-size:18px; font-weight:700; color:var(--amber); }
-  .stat .label{ font-size:9px; letter-spacing:0.12em; color:var(--concrete); text-transform:uppercase; margin-top:2px; }
+  .stat .label{ font-size:9px; color:var(--concrete); text-transform:uppercase; }
 
   /* Grid */
   .grid{
@@ -205,11 +155,6 @@
     border:1px solid var(--line);
     border-radius:10px;
     overflow:hidden;
-    position:relative;
-    user-select:none;
-    -webkit-user-select:none;
-    -webkit-touch-callout:none;
-    touch-action:manipulation;
   }
   .card .thumb{
     width:100%;
@@ -220,56 +165,15 @@
     justify-content:center;
     overflow:hidden;
   }
-  .card .thumb img{
-    width:100%; height:100%; object-fit:cover; display:block;
-    -webkit-touch-callout:none;
-    -webkit-user-select:none;
-    user-select:none;
-    pointer-events:none;
-  }
-  .card .thumb .placeholder{ font-size:28px; opacity:0.25; }
+  .card .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
   .card .info{
-    padding:4px 8px;
-    min-height:28px;
+    padding:6px 8px;
     display:flex;
     align-items:center;
     gap:8px;
-    white-space:nowrap;
-    overflow:hidden;
   }
-  .card .reg{
-    font-family:'Space Mono', monospace;
-    font-weight:400;
-    font-size:13px;
-    color:var(--amber);
-    line-height:1;
-  }
-  .card .aircraft,
-  .card .airline{
-    font-family:'Space Mono', monospace;
-    font-size:13px;
-    color:var(--white);
-    margin:0;
-    line-height:1;
-  }
-  .card .special-star{
-    margin-left:auto;
-    color:var(--amber);
-    font-size:13px;
-    font-weight:400;
-    line-height:1;
-  }
-  .empty{
-    text-align:center;
-    padding:50px 24px;
-    color:var(--concrete);
-    font-family:'Space Mono', monospace;
-    font-size:12px;
-    line-height:1.8;
-    grid-column:1 / -1;
-  }
+  .card .reg{ font-family:'Space Mono', monospace; color:var(--amber); font-size:13px; }
 
-  /* FAB */
   .fab{
     position:fixed;
     bottom:22px; right:20px;
@@ -302,33 +206,17 @@
     border-radius:14px 14px 0 0;
     width:100%;
     max-width:480px;
-    max-height:90vh;
-    overflow-y:auto;
     padding:18px;
     padding-bottom:28px;
   }
-  .modal-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:14px;
-  }
-  .modal-header h2{
-    font-size:13px;
-    letter-spacing:0.2em;
-    text-transform:uppercase;
-    color:var(--amber);
-    font-weight:700;
-  }
-  .modal-close{
-    background:none; border:none; color:var(--concrete);
-    font-size:22px; cursor:pointer; line-height:1;
-  }
+  .modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .modal-header h2{ font-size:13px; color:var(--amber); }
+  .modal-close{ background:none; border:none; color:var(--concrete); font-size:22px; cursor:pointer; }
+  
   .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
-  .field{ display:flex; flex-direction:column; gap:5px; position:relative; }
-  .field.full{ grid-column:1 / -1; }
-  label{ font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--concrete); }
-  input, select, textarea{
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  label{ font-size:10px; color:var(--concrete); text-transform:uppercase; }
+  input{
     background:var(--navy);
     border:1px solid var(--line);
     border-radius:6px;
@@ -336,143 +224,52 @@
     color:var(--white);
     font-family:'Space Mono', monospace;
     font-size:13px;
-    outline:none;
     width:100%;
+    outline:none;
   }
-  textarea{ font-family:'Archivo', sans-serif; resize:vertical; min-height:50px; }
-  input:focus, select:focus, textarea:focus{ border-color:var(--amber); }
-  input::placeholder, textarea::placeholder{ color:#4d6173; }
 
   .photozone{
     border:1px dashed var(--line);
     border-radius:8px;
-    padding:14px;
+    padding:20px;
     text-align:center;
     cursor:pointer;
-    margin-bottom:10px;
-    position:relative;
+    margin-bottom:14px;
+    background:var(--navy);
   }
-  .photozone.has-img{ padding:0; border-style:solid; overflow:hidden; }
-  .photozone img{
-    width:100%;
-    aspect-ratio:3/2;
-    object-fit:cover;
-    display:block;
-    -webkit-touch-callout:none;
-    -webkit-user-select:none;
-    user-select:none;
-    touch-action:none;
-    cursor:grab;
-  }
-  .photozone .ph-text{ font-family:'Space Mono', monospace; font-size:11px; color:var(--concrete); letter-spacing:0.1em; }
-
-  .toggle-row{ display:flex; align-items:center; gap:8px; margin:12px 0; }
-  .toggle-row input{ width:auto; accent-color:var(--amber); }
-  .toggle-row label{ font-size:12px; letter-spacing:0; text-transform:none; color:var(--white); }
+  .photozone img{ width:100%; aspect-ratio:3/2; object-fit:cover; display:block; border-radius:6px; }
+  .ph-text{ font-family:'Space Mono', monospace; font-size:12px; color:var(--concrete); }
 
   .modal-actions{ display:flex; gap:10px; margin-top:14px; }
-  .modal-actions button{
-    flex:1; border:none; border-radius:6px; padding:12px;
-    font-weight:900; font-size:13px; letter-spacing:0.15em;
-    text-transform:uppercase; cursor:pointer; font-family:'Archivo', sans-serif;
-  }
+  .modal-actions button{ flex:1; border:none; border-radius:6px; padding:12px; font-weight:900; cursor:pointer; }
   .modal-actions .save{ background:var(--amber); color:var(--navy); }
   .modal-actions .delete{ background:transparent; color:var(--red); border:1px solid var(--red); }
 
   @media (min-width:768px){
-    body{ padding-bottom:40px; }
-    header, .toolbar, .backupbar, .stats, .grid{ width:min(100%, 980px); margin-left:auto; margin-right:auto; }
-    header{ margin-top:18px; border-left:1px solid var(--line); border-right:1px solid var(--line); }
-    .toolbar{ padding-left:0; padding-right:0; }
-    .backupbar{ margin-bottom:12px; }
-    .grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; padding-left:0; padding-right:0; padding-bottom:24px; }
-    .modal-overlay{ align-items:center; padding:18px; }
-    .modal{ width:calc(100vw - 36px); max-width:none; border:1px solid var(--line); border-top:2px solid var(--amber); border-radius:14px; max-height:calc(100vh - 36px); padding:20px; }
-    .modal-body{ display:grid; grid-template-columns:minmax(360px, 1.35fr) minmax(300px, 1fr); gap:18px; align-items:start; }
-    .photozone:not(.has-img){ min-height:280px; display:flex; align-items:center; justify-content:center; }
-    .fab{ bottom:28px; right:28px; }
+    .grid{ grid-template-columns: repeat(3, 1fr); }
+    .modal-overlay{ align-items:center; }
+    .modal{ border-radius:14px; }
   }
-
-  @media (min-width:1100px){
-    header, .toolbar, .backupbar, .stats, .grid{ width:min(100% - 64px, 1280px); }
-    header{ padding-top:20px; padding-bottom:14px; }
-    h1{ font-size:24px; }
-    .grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); gap:12px; }
-    .card{ border-radius:8px; }
-    .card .info{ min-height:26px; padding:4px 7px; gap:7px; }
-    .card .reg, .card .aircraft, .card .airline, .card .special-star{ font-size:12px; }
-    .modal{ width:calc(100vw - 64px); max-width:none; padding:24px; }
-    .modal-body{ grid-template-columns:minmax(520px, 1.55fr) minmax(360px, 1fr); gap:22px; }
-    .photozone:not(.has-img){ min-height:420px; }
-    .modal-actions{ margin-top:16px; }
-  }
-
-  .ac-dropdown{ position:absolute; top:100%; left:0; right:0; background:var(--navy); border:1px solid var(--line); border-radius:6px; margin-top:2px; max-height:180px; overflow-y:auto; z-index:20; display:none; }
-  .ac-dropdown.show{ display:block; }
-  .ac-item{ padding:8px 10px; font-family:'Space Mono', monospace; font-size:12px; cursor:pointer; border-bottom:1px solid var(--line); }
-  .ac-item:active{ background:var(--navy3); }
-
-  .confirm-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:200; }
-  .confirm-overlay.show{ display:flex; }
-  .confirm-box{ background:var(--navy2); border:1px solid var(--line); border-radius:10px; padding:20px; width:80%; max-width:320px; text-align:center; }
-  .confirm-box p{ font-size:13px; margin-bottom:16px; line-height:1.6; }
-  .confirm-box .reg{ color:var(--amber); font-family:'Space Mono', monospace; font-weight:700; }
-  .confirm-actions{ display:flex; gap:10px; }
-  .confirm-actions button{ flex:1; border:none; border-radius:6px; padding:11px; font-weight:700; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; font-family:'Archivo', sans-serif; }
-  .confirm-actions .cancel{ background:var(--navy3); color:var(--white); }
-  .confirm-actions .ok{ background:var(--red); color:var(--white); }
-
-  .toast{ position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--navy3); border:1px solid var(--amber); color:var(--white); font-family:'Space Mono', monospace; font-size:12px; padding:10px 18px; border-radius:8px; z-index:300; opacity:0; transition:opacity 0.2s; pointer-events:none; white-space:nowrap; }
-  .toast.show{ opacity:1; }
-
-  .crop-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.75); display:none; align-items:center; justify-content:center; z-index:250; padding:20px; }
-  .crop-overlay.show{ display:flex; }
-  .crop-box{ background:var(--navy2); border:1px solid var(--line); border-radius:10px; padding:16px; width:100%; max-width:420px; }
-  .crop-box h2{ font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:var(--amber); font-weight:700; margin-bottom:12px; }
-  .crop-frame{ position:relative; width:100%; aspect-ratio:3/2; overflow:hidden; background:#000; border:1px solid var(--line); border-radius:6px; touch-action:none; }
-  .crop-frame img{ position:absolute; left:0; top:0; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; cursor:grab; will-change:transform; }
-  .crop-grid{ position:absolute; inset:0; pointer-events:none; }
-  .crop-grid .gline{ position:absolute; background:rgba(255,255,255,0.35); }
-  .crop-grid .gline.v{ top:0; bottom:0; width:1px; }
-  .crop-grid .gline.h{ left:0; right:0; height:1px; }
-  .crop-hint{ margin-top:8px; font-family:'Space Mono', monospace; font-size:10px; letter-spacing:0.08em; color:var(--concrete); text-align:center; }
-  .crop-zoom-row{ display:flex; align-items:center; gap:10px; margin-top:14px; }
-  .crop-zoom-row label{ font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--concrete); flex-shrink:0; }
-  .crop-zoom-row input[type=range]{ flex:1; accent-color:var(--amber); }
-  .crop-zoom-row .crop-reset{ flex-shrink:0; background:transparent; border:1px solid var(--line); color:var(--concrete); border-radius:6px; padding:6px 10px; font-family:'Space Mono', monospace; font-size:10px; letter-spacing:0.1em; cursor:pointer; }
-  .crop-actions{ display:flex; gap:10px; margin-top:14px; }
-  .crop-actions button{ flex:1; border:none; border-radius:6px; padding:12px; font-weight:900; font-size:13px; letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; font-family:'Archivo', sans-serif; }
-  .crop-actions .crop-cancel{ background:transparent; color:var(--concrete); border:1px solid var(--line); }
-  .crop-actions .crop-confirm{ background:var(--amber); color:var(--navy); }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
 </head>
 <body>
 
 <header>
   <div class="eyebrow">// REGISTRATION COLLECTION LOG</div>
-  <h1>SPOTTER LOG <span style="font-size:12px; color:var(--concrete);">v1.7 (PWA)</span></h1>
+  <h1>SPOTTER LOG <span style="font-size:12px; color:var(--concrete);">v1.7.1</span></h1>
   <div class="backup-line" id="backup-line">バックアップ未実施</div>
 </header>
 
 <div class="backupbar">
-  <button id="export-btn">⬇ JSON書き出し (Export)</button>
-  <label for="import-file">⬆ JSON読み込み (Import)</label>
+  <button id="export-btn">⬇ JSON書き出し</button>
+  <label for="import-file">⬆ JSON読み込み</label>
   <input type="file" id="import-file" accept="application/json">
+  
+  <label for="icon-file" style="background: var(--navy3); color: var(--amber); border-color: var(--amber);">🖼 アイコン設定</label>
+  <input type="file" id="icon-file" accept="image/*">
 </div>
 
 <div class="stats" id="stats"></div>
-
-<div class="toolbar" id="toolbar">
-  <div class="tabbar" id="tabbar"></div>
-  <button class="search-toggle-btn" id="search-toggle-btn">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-  </button>
-  <div class="search-box" id="search-box" style="display:none;">
-    <input type="text" class="search-input" id="search" placeholder="例）B738 ANA NGS">
-    <button class="search-clear-btn" id="search-clear-btn">✕</button>
-  </div>
-</div>
 
 <div class="grid" id="grid"></div>
 <button class="fab" id="fab">+</button>
@@ -480,181 +277,18 @@
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <div class="modal-header">
-      <h2 id="modal-title">New sighting</h2>
+      <h2>New Sighting</h2>
       <button class="modal-close" id="modal-close">×</button>
     </div>
-    <div class="modal-body">
-      <div class="photozone" id="photozone">
-        <input type="file" id="m-photo" accept="image/*" style="display:none">
-        <div class="ph-text">📷 タップして写真を選択</div>
-      </div>
-      <div>
-        <div class="row">
-          <div class="field"><label>Registration</label><input type="text" id="m-reg" placeholder="JA8XXX" autocapitalize="characters"></div>
-          <div class="field"><label>Date</label><input type="date" id="m-date"></div>
-        </div>
-        <div class="row">
-          <div class="field"><label>Airline</label><select id="m-airline"></select></div>
-          <div class="field"><label>Aircraft</label><select id="m-aircraft"></select></div>
-        </div>
-        <div class="row">
-          <div class="field"><label>Airport</label><input type="text" id="m-airport" placeholder="NGS / RJFU" autocomplete="off"><div class="ac-dropdown" id="airport-dropdown"></div></div>
-          <div class="field"><label>Spot</label><input type="text" id="m-spot" placeholder="展望台など"></div>
-        </div>
-        <div class="field full"><label>Notes</label><textarea id="m-notes"></textarea></div>
-        <div class="toggle-row"><input type="checkbox" id="m-special"><label for="m-special">★ スペマ</label></div>
-        <div class="modal-actions">
-          <button class="delete" id="modal-delete" style="display:none;">削除</button>
-          <button class="save" id="modal-save">Save</button>
-        </div>
-      </div>
+    
+    <div class="photozone" id="photozone">
+      <input type="file" id="m-photo" accept="image/*" style="display:none">
+      <div id="photo-display" class="ph-text">📷 タップして写真を選択</div>
     </div>
-  </div>
-</div>
 
-<div class="confirm-overlay" id="confirm-overlay">
-  <div class="confirm-box">
-    <p>この記録を削除しますか？<br><span class="reg" id="confirm-reg"></span></p>
-    <div class="confirm-actions"><button class="cancel" id="confirm-cancel">キャンセル</button><button class="ok" id="confirm-ok">削除する</button></div>
-  </div>
-</div>
-<div class="toast" id="toast"></div>
-
-<div class="crop-overlay" id="crop-overlay">
-  <div class="crop-box">
-    <h2>Adjust photo (3:2)</h2>
-    <div class="crop-frame" id="crop-frame"><img id="crop-img" src=""></div>
-    <div class="crop-zoom-row">
-      <label>回転</label><input type="range" id="crop-rotation" min="-45" max="45" step="0.5" value="0">
-      <button class="crop-reset" id="crop-reset">リセット</button>
+    <div class="row">
+      <div class="field"><label>Registration</label><input type="text" id="m-reg" placeholder="JA8XXX" autocapitalize="characters"></div>
+      <div class="field"><label>Date</label><input type="date" id="m-date"></div>
     </div>
-    <div class="crop-actions"><button class="crop-cancel" id="crop-cancel">キャンセル</button><button class="crop-confirm" id="crop-confirm">適用</button></div>
-  </div>
-</div>
-
-<script>
-/* ================= インライン・サービスワーカー自動作成機能 ================= */
-const swCode = `
-const CACHE_NAME = 'spotter-log-v1.7';
-self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(['.', 'index.html', 'https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700%26family=Archivo:wght@500;700;900%26display=swap'])).then(() => self.skipWaiting()));
-});
-self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.map((k) => k !== CACHE_NAME && caches.delete(k)))).then(() => self.clients.claim()));
-});
-self.addEventListener('fetch', (e) => {
-  e.respondWith(caches.match(e.request).then((res) => res || fetch(e.request)));
-});`;
-
-// 同一フォルダに sw.js が存在しない場合、ブラウザ上で動的に生成して登録を試みる
-if ('serviceWorker' in navigator) {
-  const blob = new Blob([swCode], { type: 'application/javascript' });
-  const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl, { scope: './' })
-    .then(reg => console.log('SW registered'))
-    .catch(err => {
-      // Blob URLでの登録が弾かれた場合は、同階層の通常ファイルとして再読込を試行
-      navigator.serviceWorker.register('sw.js').catch(e => console.log('Standalone mode pending'));
-    });
-}
-
-/* ================= 既存のアプリケーション・ロジック（そのまま継承） ================= */
-let entries = [];
-let editingId = null;
-let pendingPhoto = null;
-let pendingExif = null;
-let sortKey = 'added';
-let sortDir = 'desc';
-
-const AIRLINES = ['ANA','JAL','ORC','SKY','JJP','APJ','SNA','SFJ','FDA','JAC','AMX','ADO','IBX'];
-const AIRLINE_AIRCRAFT = {
-  ANA: ['B738','A20N','A21N','DH8D','B763','B772','B77W','B788','B789','B78X'], JAL: ['B738','B763','B788','B789','A359','A35K','E170','E190','AT46','AT76'], ORC: ['AT46'], SKY: ['B738'], JJP: ['A20N'], APJ: ['A20N'], SNA: ['B738'], SFJ: ['A20N'], FDA: ['E170','E75L'], JAC: ['AT46','AT76'], AMX: ['AT46'], ADO: ['B737','B738'], IBX: ['CRJ7']
-};
-const ALL_AIRCRAFT = [...new Set(Object.values(AIRLINE_AIRCRAFT).flat())].sort();
-const AIRPORTS = [{iata:'NGS', icao:'RJFU', name:'長崎'},{iata:'FUK', icao:'RJFF', name:'福岡'},{iata:'HND', icao:'RJTT', name:'羽田'},{iata:'NRT', icao:'RJAA', name:'成田'},{iata:'ITM', icao:'RJOO', name:'伊丹'},{iata:'KIX', icao:'RJBB', name:'関西'}];
-
-const DB_NAME = 'spotterlog-db';
-const STORE_NAME = 'entries';
-
-function idbOpen(){
-  return new Promise((res,rej)=>{
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = (e)=> { if(!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, {keyPath:'id'}); };
-    req.onsuccess = ()=> res(req.result); req.onerror = ()=> rej(req.error);
-  });
-}
-async function load(){
-  try{
-    const db = await idbOpen();
-    entries = await new Promise((res,rej)=>{
-      const req = db.transaction(STORE_NAME,'readonly').objectStore(STORE_NAME).getAll();
-      req.onsuccess = ()=> res(req.result); req.onerror = ()=> rej(req.error);
-    });
-  }catch(e){ entries = []; }
-  render();
-}
-async function save(){
-  try{
-    const db = await idbOpen();
-    await new Promise((res,rej)=>{
-      const tx = db.transaction(STORE_NAME,'readwrite');
-      const store = tx.objectStore(STORE_NAME);
-      store.clear(); entries.forEach(e=> store.put(e));
-      tx.oncomplete = ()=> res(); tx.onerror = ()=> rej(tx.error);
-    });
-  }catch(e){ alert('保存失敗: ' + e.message); }
-}
-
-function toast(msg){
-  const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show');
-  setTimeout(()=> el.classList.remove('show'), 1800);
-}
-
-// 描画およびその他の設定（簡略化して同梱）
-function render(){
-  const grid = document.getElementById('grid'); grid.innerHTML = '';
-  document.getElementById('stats').innerHTML = `<div class="stat"><div class="num">${entries.length}</div><div class="label">TOTAL LOGS</div></div>`;
-  
-  if(entries.length === 0){
-    grid.innerHTML = `<div class="empty">記録がありません。右下の + から登録してください。</div>`;
-    return;
-  }
-  entries.forEach(e=>{
-    const card = document.createElement('div'); card.className = 'card';
-    card.innerHTML = `<div class="thumb">${e.photo ? `<img src="${e.photo}">` : '✈'}</div><div class="info"><span class="reg">${e.reg||'—'}</span> <span class="aircraft">${e.aircraft||''}</span></div>`;
-    card.onclick = ()=> openModal(e.id);
-    grid.appendChild(card);
-  });
-}
-
-function openModal(id){
-  editingId = id; const entry = id ? entries.find(e=>e.id===id) : null;
-  document.getElementById('m-reg').value = entry ? entry.reg : '';
-  document.getElementById('m-date').value = entry ? entry.date : new Date().toISOString().slice(0,10);
-  document.getElementById('modal-delete').style.display = entry ? 'block' : 'none';
-  modalOverlay.classList.add('show');
-}
-document.getElementById('modal-close').onclick = ()=> modalOverlay.classList.remove('remove');
-document.getElementById('fab').onclick = ()=> openModal(null);
-document.getElementById('modal-save').onclick = ()=>{
-  const reg = document.getElementById('m-reg').value.trim().toUpperCase();
-  if(!reg) return alert('レジを入力してください');
-  if(editingId){
-    const entry = entries.find(e=>e.id===editingId); Object.assign(entry, {reg});
-  } else {
-    entries.unshift({id: Date.now()+'-'+Math.random().toString(36).slice(2,5), reg, date: document.getElementById('m-date').value, _ts:Date.now()});
-  }
-  save(); modalOverlay.classList.remove('show'); render();
-};
-
-document.getElementById('export-btn').onclick = ()=>{
-  const blob = new Blob([JSON.stringify({app:'spotter_log', entries}, null, 2)], {type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'spotter_log.json'; a.click();
-  toast('JSONをエクスポートしました');
-};
-
-const modalOverlay = document.getElementById('modal-overlay');
-load();
-</script>
-</body>
-</html>
+    <div class="modal-actions">
+      <button class="delete" id="modal-delete" style="display
