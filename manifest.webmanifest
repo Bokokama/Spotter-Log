@@ -3,7 +3,7 @@
   "short_name": "Spotter Log",
   "description": "A spotting log app that stores aircraft sighting records on this device.",
   "lang": "ja",
-  "start_url": "./SPOTTER_LOG_v1.7.responsive.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
