@@ -1,0 +1,1861 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0B1F30">
+<meta name="color-scheme" content="dark">
+<title>SPOTTER LOG</title>
+<style>
+  :root{ color-scheme: dark; }
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo:wght@500;700;900&display=swap');
+
+  :root{
+    --navy:#02090E;
+    --navy2:#0A1722;
+    --navy3:#10283B;
+    --amber:#FFB627;
+    --concrete:#93A5B0;
+    --white:#F3F6F8;
+    --red:#E5572B;
+    --line:rgba(255,255,255,0.09);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{ -webkit-tap-highlight-color: transparent; }
+  body{
+    background:var(--navy);
+    color:var(--white);
+    font-family:'Archivo', sans-serif;
+    min-height:100vh;
+    padding-bottom:90px;
+  }
+
+  /* Header */
+  header{
+    padding:22px 16px 16px;
+    border-bottom:2px solid var(--amber);
+    position:relative;
+    overflow:hidden;
+  }
+  header::after{
+    content:"";
+    position:absolute;
+    top:-10px; right:10px;
+    width:160px; height:160px;
+    border:1px solid var(--line);
+    border-radius:50%;
+  }
+  .eyebrow{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.25em;
+    color:var(--amber);
+    text-transform:uppercase;
+    margin-bottom:4px;
+  }
+  h1{ font-size:26px; font-weight:900; letter-spacing:0.02em; }
+  .backup-line{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--concrete);
+    margin-top:8px;
+  }
+  .backup-line.warn{ color:var(--red); }
+
+  /* Toolbar */
+  .toolbar{
+    padding:12px 16px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .search-input{
+    flex:1;
+    background:var(--navy2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 40px 10px 12px;
+    color:var(--white);
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    outline:none;
+    width:100%;
+  }
+  .search-input:focus{ border-color:var(--amber); }
+  .search-input::placeholder{ color:#4d6173; }
+
+  /* Search icon toggle (line-style magnifier) */
+  .search-toggle-btn{
+    flex-shrink:0;
+    width:44px; height:44px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--navy2);
+    color:var(--white);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+  .search-toggle-btn svg{ width:24px; height:24px; }
+
+  /* Expanded search box */
+  .search-box{
+    flex:1;
+    position:relative;
+    display:flex;
+    align-items:center;
+  }
+  .search-box .search-input{ padding-right:40px; }
+  .search-clear-btn{
+    position:absolute;
+    right:6px; top:50%;
+    transform:translateY(-50%);
+    width:30px; height:30px;
+    border:none;
+    background:none;
+    color:var(--concrete);
+    font-size:18px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .search-clear-btn:active{ color:var(--red); }
+
+  /* Sort tab bar */
+  .tabbar{
+    display:flex;
+    gap:8px;
+    flex:1;
+    overflow-x:auto;
+    min-width:0;
+  }
+  .tab{
+    flex-shrink:0;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    padding:7px 14px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:var(--navy2);
+    color:var(--concrete);
+    cursor:pointer;
+    text-transform:uppercase;
+    white-space:nowrap;
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+  .tab.active{
+    background:var(--amber);
+    color:var(--navy);
+    border-color:var(--amber);
+    font-weight:700;
+  }
+  .tab .dir{ font-size:9px; }
+
+  .backupbar{
+    display:flex;
+    gap:8px;
+    margin:0 16px 12px;
+  }
+  .backupbar button, .backupbar label{
+    flex:1;
+    text-align:center;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    padding:9px 8px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:var(--navy2);
+    color:var(--concrete);
+    cursor:pointer;
+  }
+  .backupbar input[type=file]{ display:none; }
+
+  /* Stats strip */
+  .stats{
+    display:flex;
+    gap:1px;
+    background:var(--line);
+    border-bottom:1px solid var(--line);
+    margin-bottom:4px;
+  }
+  .stat{ flex:1; background:var(--navy); padding:10px 8px; text-align:center; }
+  .stat .num{ font-family:'Space Mono', monospace; font-size:18px; font-weight:700; color:var(--amber); }
+  .stat .label{ font-size:9px; letter-spacing:0.12em; color:var(--concrete); text-transform:uppercase; margin-top:2px; }
+
+  /* Grid */
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    padding:0 16px 16px;
+  }
+  .card{
+    background:var(--navy2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    position:relative;
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-touch-callout:none;
+    touch-action:manipulation;
+  }
+  .card .thumb{
+    width:100%;
+    aspect-ratio:3/2;
+    background:var(--navy3);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .card .thumb img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;
+    user-select:none;
+    pointer-events:none;
+  }
+  .card .thumb .placeholder{ font-size:28px; opacity:0.25; }
+  .card .info{
+    padding:4px 8px;
+    min-height:28px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    white-space:nowrap;
+    overflow:hidden;
+  }
+  .card .reg{
+    font-family:'Space Mono', monospace;
+    font-weight:400;
+    font-size:13px;
+    color:var(--amber);
+    line-height:1;
+  }
+  .card .aircraft,
+  .card .airline{
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    color:var(--white);
+    margin:0;
+    line-height:1;
+  }
+  .card .special-star{
+    margin-left:auto;
+    color:var(--amber);
+    font-size:13px;
+    font-weight:400;
+    line-height:1;
+  }
+  .empty{
+    text-align:center;
+    padding:50px 24px;
+    color:var(--concrete);
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    line-height:1.8;
+    grid-column:1 / -1;
+  }
+
+  /* FAB */
+  .fab{
+    position:fixed;
+    bottom:22px; right:20px;
+    width:58px; height:58px;
+    border-radius:50%;
+    background:var(--amber);
+    color:var(--navy);
+    border:none;
+    font-size:28px;
+    font-weight:900;
+    box-shadow:0 4px 14px rgba(0,0,0,0.4);
+    cursor:pointer;
+    z-index:50;
+  }
+
+  /* Modal */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:100;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal{
+    background:var(--navy2);
+    border-top:2px solid var(--amber);
+    border-radius:14px 14px 0 0;
+    width:100%;
+    max-width:480px;
+    max-height:90vh;
+    overflow-y:auto;
+    padding:18px;
+    padding-bottom:28px;
+  }
+  .modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .modal-header h2{
+    font-size:13px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--amber);
+    font-weight:700;
+  }
+  .modal-close{
+    background:none; border:none; color:var(--concrete);
+    font-size:22px; cursor:pointer; line-height:1;
+  }
+  .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  .field{ display:flex; flex-direction:column; gap:5px; position:relative; }
+  .field.full{ grid-column:1 / -1; }
+  label{ font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--concrete); }
+  input, select, textarea{
+    background:var(--navy);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:9px 10px;
+    color:var(--white);
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    outline:none;
+    width:100%;
+  }
+  textarea{ font-family:'Archivo', sans-serif; resize:vertical; min-height:50px; }
+  input:focus, select:focus, textarea:focus{ border-color:var(--amber); }
+  input::placeholder, textarea::placeholder{ color:#4d6173; }
+
+  .photozone{
+    border:1px dashed var(--line);
+    border-radius:8px;
+    padding:14px;
+    text-align:center;
+    cursor:pointer;
+    margin-bottom:10px;
+    position:relative;
+  }
+  .photozone.has-img{ padding:0; border-style:solid; overflow:hidden; }
+  .photozone img{
+    width:100%;
+    aspect-ratio:3/2;
+    object-fit:cover;
+    display:block;
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;
+    user-select:none;
+    touch-action:none;
+    cursor:grab;
+  }
+  .photozone .ph-text{ font-family:'Space Mono', monospace; font-size:11px; color:var(--concrete); letter-spacing:0.1em; }
+  .photo-hint{
+    position:absolute;
+    bottom:6px; left:0; right:0;
+    text-align:center;
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.1em;
+    color:var(--white);
+    background:rgba(11,31,48,0.55);
+    padding:4px 0;
+    pointer-events:none;
+  }
+
+  .toggle-row{ display:flex; align-items:center; gap:8px; margin:12px 0; }
+  .toggle-row input{ width:auto; accent-color:var(--amber); }
+  .toggle-row label{ font-size:12px; letter-spacing:0; text-transform:none; color:var(--white); }
+
+  .modal-actions{ display:flex; gap:10px; margin-top:14px; }
+  .modal-actions button{
+    flex:1; border:none; border-radius:6px; padding:12px;
+    font-weight:900; font-size:13px; letter-spacing:0.15em;
+    text-transform:uppercase; cursor:pointer; font-family:'Archivo', sans-serif;
+  }
+  .modal-actions .save{ background:var(--amber); color:var(--navy); }
+  .modal-actions .delete{ background:transparent; color:var(--red); border:1px solid var(--red); }
+
+  .modal-body,
+  .modal-photo-pane,
+  .modal-form-pane{
+    display:block;
+  }
+
+  @media (min-width:768px){
+    body{
+      padding-bottom:40px;
+    }
+    header,
+    .toolbar,
+    .backupbar,
+    .stats,
+    .grid{
+      width:min(100%, 980px);
+      margin-left:auto;
+      margin-right:auto;
+    }
+    header{
+      margin-top:18px;
+      border-left:1px solid var(--line);
+      border-right:1px solid var(--line);
+    }
+    .toolbar{
+      padding-left:0;
+      padding-right:0;
+    }
+    .backupbar{
+      margin-bottom:12px;
+    }
+    .grid{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:12px;
+      padding-left:0;
+      padding-right:0;
+      padding-bottom:24px;
+    }
+    .modal-overlay{
+      align-items:center;
+      padding:18px;
+    }
+    .modal{
+      width:calc(100vw - 36px);
+      max-width:none;
+      border:1px solid var(--line);
+      border-top:2px solid var(--amber);
+      border-radius:14px;
+      max-height:calc(100vh - 36px);
+      padding:20px;
+    }
+    .modal-body{
+      display:grid;
+      grid-template-columns:minmax(360px, 1.35fr) minmax(300px, 1fr);
+      gap:18px;
+      align-items:start;
+    }
+    .modal-photo-pane{
+      position:sticky;
+      top:0;
+    }
+    .photozone{
+      margin-bottom:0;
+    }
+    .photozone:not(.has-img){
+      min-height:280px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .fab{
+      bottom:28px;
+      right:28px;
+    }
+  }
+
+  @media (min-width:1100px){
+    header,
+    .toolbar,
+    .backupbar,
+    .stats,
+    .grid{
+      width:min(100% - 64px, 1280px);
+    }
+    header{
+      padding-top:20px;
+      padding-bottom:14px;
+    }
+    h1{
+      font-size:24px;
+    }
+    .grid{
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:12px;
+    }
+    .card{
+      border-radius:8px;
+    }
+    .card .info{
+      min-height:26px;
+      padding:4px 7px;
+      gap:7px;
+    }
+    .card .reg,
+    .card .aircraft,
+    .card .airline{
+      font-size:12px;
+    }
+    .card .special-star{
+      font-size:12px;
+    }
+    .modal{
+      width:calc(100vw - 64px);
+      max-width:none;
+      padding:24px;
+    }
+    .modal-body{
+      grid-template-columns:minmax(520px, 1.55fr) minmax(360px, 1fr);
+      gap:22px;
+    }
+    .photozone:not(.has-img){
+      min-height:420px;
+    }
+    .modal-actions{
+      margin-top:16px;
+    }
+  }
+
+  /* Airport autocomplete dropdown */
+  .ac-dropdown{
+    position:absolute;
+    top:100%; left:0; right:0;
+    background:var(--navy);
+    border:1px solid var(--line);
+    border-radius:6px;
+    margin-top:2px;
+    max-height:180px;
+    overflow-y:auto;
+    z-index:20;
+    display:none;
+  }
+  .ac-dropdown.show{ display:block; }
+  .ac-item{
+    padding:8px 10px;
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+  }
+  .ac-item:last-child{ border-bottom:none; }
+  .ac-item:active{ background:var(--navy3); }
+
+  /* Confirm dialog */
+  .confirm-overlay{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.6);
+    display:none; align-items:center; justify-content:center;
+    z-index:200;
+  }
+  .confirm-overlay.show{ display:flex; }
+  .confirm-box{
+    background:var(--navy2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:20px;
+    width:80%;
+    max-width:320px;
+    text-align:center;
+  }
+  .confirm-box p{ font-size:13px; margin-bottom:16px; line-height:1.6; }
+  .confirm-box .reg{ color:var(--amber); font-family:'Space Mono', monospace; font-weight:700; }
+  .confirm-actions{ display:flex; gap:10px; }
+  .confirm-actions button{
+    flex:1; border:none; border-radius:6px; padding:11px;
+    font-weight:700; font-size:12px; letter-spacing:0.12em;
+    text-transform:uppercase; cursor:pointer; font-family:'Archivo', sans-serif;
+  }
+  .confirm-actions .cancel{ background:var(--navy3); color:var(--white); }
+  .confirm-actions .ok{ background:var(--red); color:var(--white); }
+
+  .toast{
+    position:fixed;
+    bottom:90px; left:50%;
+    transform:translateX(-50%);
+    background:var(--navy3);
+    border:1px solid var(--amber);
+    color:var(--white);
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    padding:10px 18px;
+    border-radius:8px;
+    z-index:300;
+    opacity:0;
+    transition:opacity 0.2s;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .toast.show{ opacity:1; }
+
+  /* Crop overlay */
+  .crop-overlay{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.75);
+    display:none; align-items:center; justify-content:center;
+    z-index:250;
+    padding:20px;
+  }
+  .crop-overlay.show{ display:flex; }
+  .crop-box{
+    background:var(--navy2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px;
+    width:100%;
+    max-width:420px;
+  }
+  .crop-box h2{
+    font-size:12px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--amber);
+    font-weight:700;
+    margin-bottom:12px;
+  }
+  .crop-frame{
+    position:relative;
+    width:100%;
+    aspect-ratio:3/2;
+    overflow:hidden;
+    background:#000;
+    border:1px solid var(--line);
+    border-radius:6px;
+    touch-action:none;
+  }
+  .crop-frame img{
+    position:absolute;
+    left:0; top:0;
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;
+    user-select:none;
+    cursor:grab;
+    will-change:transform;
+  }
+  .crop-grid{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+  .crop-grid .gline{
+    position:absolute;
+    background:rgba(255,255,255,0.35);
+  }
+  .crop-grid .gline.v{ top:0; bottom:0; width:1px; }
+  .crop-grid .gline.h{ left:0; right:0; height:1px; }
+  .crop-hint{
+    margin-top:8px;
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.08em;
+    color:var(--concrete);
+    text-align:center;
+  }
+  .crop-zoom-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:14px;
+  }
+  .crop-zoom-row label{
+    font-size:10px;
+    letter-spacing:0.15em;
+    text-transform:uppercase;
+    color:var(--concrete);
+    flex-shrink:0;
+  }
+  .crop-zoom-row input[type=range]{
+    flex:1;
+    accent-color:var(--amber);
+  }
+  .crop-zoom-row .crop-reset{
+    flex-shrink:0;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--concrete);
+    border-radius:6px;
+    padding:6px 10px;
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.1em;
+    cursor:pointer;
+  }
+  .crop-actions{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+  }
+  .crop-actions button{
+    flex:1; border:none; border-radius:6px; padding:12px;
+    font-weight:900; font-size:13px; letter-spacing:0.15em;
+    text-transform:uppercase; cursor:pointer; font-family:'Archivo', sans-serif;
+  }
+  .crop-actions .crop-cancel{ background:transparent; color:var(--concrete); border:1px solid var(--line); }
+  .crop-actions .crop-confirm{ background:var(--amber); color:var(--navy); }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">// REGISTRATION COLLECTION LOG</div>
+  <h1>SPOTTER LOG <span style="font-size:12px; color:var(--concrete);">v1.7</span></h1>
+  <div class="backup-line" id="backup-line">バックアップ未実施</div>
+</header>
+
+<div class="backupbar">
+  <button id="export-btn">⬇ JSON書き出し (Export)</button>
+  <label for="import-file">⬆ JSON読み込み (Import)</label>
+  <input type="file" id="import-file" accept="application/json">
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="toolbar" id="toolbar">
+  <div class="tabbar" id="tabbar"></div>
+
+  <button class="search-toggle-btn" id="search-toggle-btn" title="検索">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="7"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+  </button>
+
+  <div class="search-box" id="search-box" style="display:none;">
+    <input type="text" class="search-input" id="search" placeholder="例）B738 ANA NGS">
+    <button class="search-clear-btn" id="search-clear-btn">✕</button>
+  </div>
+</div>
+
+<div id="sort-dropdown" style="display:none"></div>
+
+<div class="grid" id="grid"></div>
+
+<button class="fab" id="fab">+</button>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">New sighting</h2>
+      <button class="modal-close" id="modal-close">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-photo-pane">
+        <div class="photozone" id="photozone">
+      <input type="file" id="m-photo" accept="image/*" style="display:none">
+      <div class="ph-text">📷 タップして写真を選択</div>
+        </div>
+      </div>
+
+      <div class="modal-form-pane">
+        <div class="row">
+      <div class="field">
+        <label>Registration</label>
+        <input type="text" id="m-reg" placeholder="JA8XXX" autocapitalize="characters">
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="m-date">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Airline</label>
+        <input type="text" id="m-airline" list="m-airline-list" placeholder="ANA / JAL / DLH" autocapitalize="characters">
+        <datalist id="m-airline-list"></datalist>
+      </div>
+      <div class="field">
+        <label>Aircraft</label>
+        <input type="text" id="m-aircraft" list="m-aircraft-list" placeholder="B738 / A359 / B77W" autocapitalize="characters">
+        <datalist id="m-aircraft-list"></datalist>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Airport</label>
+        <input type="text" id="m-airport" placeholder="NGS / RJFU / 長崎" autocomplete="off">
+        <div class="ac-dropdown" id="airport-dropdown"></div>
+      </div>
+      <div class="field">
+        <label>Spot</label>
+        <input type="text" id="m-spot" placeholder="夕陽が丘展望台 など">
+      </div>
+    </div>
+    <div class="field full" style="margin-bottom:6px;">
+      <label>Notes</label>
+      <textarea id="m-notes"></textarea>
+    </div>
+    <div class="toggle-row">
+      <input type="checkbox" id="m-special">
+      <label for="m-special">★ スペマ</label>
+    </div>
+
+    <div class="modal-actions">
+      <button class="delete" id="modal-delete" style="display:none;">削除</button>
+      <button class="save" id="modal-save">Save</button>
+    </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <p>この記録を削除しますか？<br><span class="reg" id="confirm-reg"></span></p>
+    <div class="confirm-actions">
+      <button class="cancel" id="confirm-cancel">キャンセル</button>
+      <button class="ok" id="confirm-ok">削除する</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Crop overlay -->
+<div class="crop-overlay" id="crop-overlay">
+  <div class="crop-box">
+    <h2>Adjust photo (3:2)</h2>
+    <div class="crop-frame" id="crop-frame">
+      <img id="crop-img" src="" alt="">
+      <div class="crop-grid">
+        <div class="gline v" style="left:33.333%"></div>
+        <div class="gline v" style="left:66.667%"></div>
+        <div class="gline h" style="top:33.333%"></div>
+        <div class="gline h" style="top:66.667%"></div>
+      </div>
+    </div>
+    <div class="crop-hint">二本指で拡大縮小・移動 / スライダーで回転</div>
+    <div class="crop-zoom-row">
+      <label>回転</label>
+      <input type="range" id="crop-rotation" min="-45" max="45" step="0.5" value="0">
+      <button class="crop-reset" id="crop-reset">リセット</button>
+    </div>
+    <div class="crop-actions">
+      <button class="crop-cancel" id="crop-cancel">キャンセル</button>
+      <button class="crop-confirm" id="crop-confirm">適用</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= DATA ================= */
+let entries = [];
+let editingId = null;   // null = new entry
+let pendingPhoto = null; // dataURL or null or undefined(unchanged on edit)
+let pendingExif = null;
+let longPressTimer = null;
+let sortKey = 'added';   // 'added' | 'reg' | 'date' | 'aircraft' | 'airline' | 'special'
+let sortDir = 'desc';    // 'asc' | 'desc'
+
+const AIRLINES = ['ANA','JAL','ORC','SKY','JJP','APJ','SNA','SFJ','FDA','JAC','AMX','ADO','IBX'];
+
+const AIRLINE_AIRCRAFT = {
+  ANA: ['B738','A20N','A21N','DH8D','B763','B772','B77W','B788','B789','B78X'],
+  JAL: ['B738','B763','B788','B789','A359','A35K','E170','E190','AT46','AT76'],
+  ORC: ['AT46'],
+  SKY: ['B738'],
+  JJP: ['A20N'],
+  APJ: ['A20N'],
+  SNA: ['B738'],
+  SFJ: ['A20N'],
+  FDA: ['E170','E75L'],
+  JAC: ['AT46','AT76'],
+  AMX: ['AT46'],
+  ADO: ['B737','B738'],
+  IBX: ['CRJ7']
+};
+const ALL_AIRCRAFT = [...new Set(Object.values(AIRLINE_AIRCRAFT).flat())].sort();
+
+const AIRCRAFT_NAMES = {
+  B737: '737-700',
+  B738: '737-800',
+  A20N: 'A320neo',
+  A21N: 'A321neo',
+  DH8D: 'Dash 8-400 / Q400',
+  B763: '767-300',
+  B772: '777-200',
+  B77W: '777-300ER',
+  B788: '787-8',
+  B789: '787-9',
+  B78X: '787-10',
+  A359: 'A350-900',
+  A35K: 'A350-1000',
+  E170: 'Embraer E170',
+  E75L: 'Embraer E175',
+  E190: 'Embraer E190',
+  AT46: 'ATR42-600',
+  AT76: 'ATR72-600',
+  CRJ7: 'CRJ-700'
+};
+function aircraftLabel(code){
+  const name = AIRCRAFT_NAMES[code];
+  return name ? `${code} (${name})` : code;
+}
+
+const AIRPORTS = [
+  {iata:'NGS', icao:'RJFU', name:'長崎'},
+  {iata:'FUK', icao:'RJFF', name:'福岡'},
+  {iata:'KKJ', icao:'RJFR', name:'北九州'},
+  {iata:'HSG', icao:'RJFS', name:'佐賀'},
+  {iata:'KMJ', icao:'RJFT', name:'熊本'},
+  {iata:'OIT', icao:'RJFO', name:'大分'},
+  {iata:'KMI', icao:'RJFM', name:'宮崎'},
+  {iata:'KOJ', icao:'RJFK', name:'鹿児島'},
+  {iata:'OKA', icao:'ROAH', name:'那覇'},
+  {iata:'ISG', icao:'ROIG', name:'石垣'},
+  {iata:'MMY', icao:'ROMY', name:'宮古'},
+  {iata:'HND', icao:'RJTT', name:'東京/羽田'},
+  {iata:'NRT', icao:'RJAA', name:'東京/成田'},
+  {iata:'CTS', icao:'RJCC', name:'新千歳'},
+  {iata:'SDJ', icao:'RJSS', name:'仙台'},
+  {iata:'KMQ', icao:'RJNK', name:'小松'},
+  {iata:'ITM', icao:'RJOO', name:'大阪/伊丹'},
+  {iata:'KIX', icao:'RJBB', name:'関西'},
+  {iata:'UKB', icao:'RJBE', name:'神戸'},
+  {iata:'NGO', icao:'RJGG', name:'中部(セントレア)'},
+  {iata:'HIJ', icao:'RJOA', name:'広島'},
+  {iata:'TAK', icao:'RJOT', name:'高松'},
+  {iata:'MYJ', icao:'RJOM', name:'松山'},
+  {iata:'KCZ', icao:'RJOK', name:'高知'}
+];
+
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+/* ================= STORAGE (IndexedDB) ================= */
+const OLD_STORAGE_KEY = 'spotterlog-v0.1';
+const BACKUP_KEY = 'spotterlog-last-backup';
+const DB_NAME = 'spotterlog-db';
+const DB_VERSION = 1;
+const STORE_NAME = 'entries';
+
+function idbOpen(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e)=>{
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(STORE_NAME)){
+        db.createObjectStore(STORE_NAME, {keyPath:'id'});
+      }
+    };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function idbGetAll(){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(STORE_NAME,'readonly');
+    const req = tx.objectStore(STORE_NAME).getAll();
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function idbReplaceAll(list){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(STORE_NAME,'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    store.clear();
+    list.forEach(e=> store.put(e));
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  });
+}
+
+async function migrateFromLocalStorageIfNeeded(){
+  try{
+    const existing = await idbGetAll();
+    if(existing.length > 0) return; // already migrated / has data
+  }catch(e){ /* proceed to try migration anyway */ }
+
+  try{
+    const raw = localStorage.getItem(OLD_STORAGE_KEY);
+    if(raw){
+      const old = JSON.parse(raw);
+      if(Array.isArray(old) && old.length){
+        await idbReplaceAll(old);
+        localStorage.removeItem(OLD_STORAGE_KEY);
+        toast(`localStorageから${old.length}件をIndexedDBに移行しました`);
+      }
+    }
+  }catch(e){
+    console.error('migration failed', e);
+  }
+}
+
+async function load(){
+  await migrateFromLocalStorageIfNeeded();
+  try{
+    entries = await idbGetAll();
+  }catch(e){ entries = []; }
+  renderBackupLine();
+  render();
+}
+async function save(){
+  try{
+    await idbReplaceAll(entries);
+  }catch(e){
+    alert('保存に失敗しました。\n(' + e.message + ')\nこまめにJSON書き出しでバックアップしてください。');
+  }
+}
+function renderBackupLine(){
+  const el = document.getElementById('backup-line');
+  const last = localStorage.getItem(BACKUP_KEY);
+  if(!last){
+    el.textContent = '⚠ 一度もJSON書き出しをしていません';
+    el.classList.add('warn');
+    return;
+  }
+  const d = new Date(last);
+  const diffDays = (Date.now() - d.getTime()) / (1000*60*60*24);
+  const fmt = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  el.textContent = `最終バックアップ: ${fmt}` + (diffDays > 7 ? ' (7日以上前 ⚠)' : '');
+  el.classList.toggle('warn', diffDays > 7);
+}
+
+/* ================= IMAGE COMPRESSION ================= */
+function isCanvasBlack(ctx, width, height){
+  try{
+    const points = [
+      [Math.floor(width*0.1), Math.floor(height*0.1)],
+      [Math.floor(width*0.5), Math.floor(height*0.5)],
+      [Math.floor(width*0.9), Math.floor(height*0.9)],
+      [Math.floor(width*0.5), Math.floor(height*0.1)],
+      [Math.floor(width*0.1), Math.floor(height*0.9)]
+    ];
+    for(const [px,py] of points){
+      const d = ctx.getImageData(px,py,1,1).data;
+      if(!(d[0]===0 && d[1]===0 && d[2]===0)) return false;
+    }
+    return true;
+  }catch(e){
+    return false; // can't check -> assume ok
+  }
+}
+
+function targetDims(srcW, srcH, maxDim){
+  let width = srcW, height = srcH;
+  if(width > maxDim || height > maxDim){
+    if(width > height){ height = Math.round(height * maxDim/width); width = maxDim; }
+    else { width = Math.round(width * maxDim/height); height = maxDim; }
+  }
+  return {width, height};
+}
+
+function canvasFromBitmap(bitmap, width, height){
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  return {canvas, ctx};
+}
+
+function loadHtmlImage(file){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = ()=>{ resolve(img); URL.revokeObjectURL(url); };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('img decode failed')); };
+    img.src = url;
+  });
+}
+
+async function compressImage(file){
+  const maxDim = 1280;
+  const attempts = [];
+
+  // Strategy 1: createImageBitmap, default
+  attempts.push(async ()=>{
+    const bmp = await createImageBitmap(file);
+    const {width,height} = targetDims(bmp.width, bmp.height, maxDim);
+    const {canvas, ctx} = canvasFromBitmap(bmp, width, height);
+    if(bmp.close) bmp.close();
+    return {canvas, ctx};
+  });
+
+  // Strategy 2: createImageBitmap with resize-during-decode (different decode path)
+  attempts.push(async ()=>{
+    const probe = await createImageBitmap(file);
+    const {width,height} = targetDims(probe.width, probe.height, maxDim);
+    if(probe.close) probe.close();
+    const bmp = await createImageBitmap(file, { resizeWidth: width, resizeHeight: height, resizeQuality: 'medium' });
+    const {canvas, ctx} = canvasFromBitmap(bmp, width, height);
+    if(bmp.close) bmp.close();
+    return {canvas, ctx};
+  });
+
+  // Strategy 3: createImageBitmap with colorSpaceConversion none
+  attempts.push(async ()=>{
+    const bmp = await createImageBitmap(file, { colorSpaceConversion: 'none' });
+    const {width,height} = targetDims(bmp.width, bmp.height, maxDim);
+    const {canvas, ctx} = canvasFromBitmap(bmp, width, height);
+    if(bmp.close) bmp.close();
+    return {canvas, ctx};
+  });
+
+  // Strategy 4: classic <img> + drawImage
+  attempts.push(async ()=>{
+    const img = await loadHtmlImage(file);
+    const {width,height} = targetDims(img.naturalWidth, img.naturalHeight, maxDim);
+    const canvas = document.createElement('canvas');
+    canvas.width = width; canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img,0,0,width,height);
+    return {canvas, ctx};
+  });
+
+  let lastErr = null;
+  for(const attempt of attempts){
+    try{
+      const {canvas, ctx} = await attempt();
+      if(isCanvasBlack(ctx, canvas.width, canvas.height)){
+        lastErr = new Error('黒画像(デコード失敗)');
+        continue;
+      }
+      return canvas.toDataURL('image/jpeg', 0.85);
+    }catch(e){
+      lastErr = e;
+    }
+  }
+  throw new Error('写真のデコードに失敗しました(' + (lastErr ? lastErr.message : 'unknown') + ')');
+}
+
+/* ================= TOAST ================= */
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=> el.classList.remove('show'), 1800);
+}
+
+/* ================= AIRLINE / AIRCRAFT SELECTS ================= */
+function populateAirlineSelect(){
+  const list = document.getElementById('m-airline-list');
+  list.innerHTML = '';
+  AIRLINES.forEach(a=>{
+    const o = document.createElement('option');
+    o.value = a;
+    list.appendChild(o);
+  });
+}
+function populateAircraftSelect(airline, keep){
+  const input = document.getElementById('m-aircraft');
+  const datalist = document.getElementById('m-aircraft-list');
+  const normalizedAirline = (airline || '').trim().toUpperCase();
+  const candidates = normalizedAirline && AIRLINE_AIRCRAFT[normalizedAirline] ? AIRLINE_AIRCRAFT[normalizedAirline] : ALL_AIRCRAFT;
+  datalist.innerHTML = '';
+  candidates.forEach(a=>{
+    const o = document.createElement('option');
+    o.value = a;
+    o.label = aircraftLabel(a);
+    datalist.appendChild(o);
+  });
+  if(keep){
+    input.value = keep;
+  }
+}
+document.getElementById('m-airline').addEventListener('input', (e)=>{
+  populateAircraftSelect(e.target.value, document.getElementById('m-aircraft').value);
+});
+document.getElementById('m-airline').addEventListener('change', (e)=>{
+  e.target.value = e.target.value.trim().toUpperCase();
+  populateAircraftSelect(e.target.value, document.getElementById('m-aircraft').value);
+});
+document.getElementById('m-aircraft').addEventListener('change', (e)=>{
+  e.target.value = e.target.value.trim().toUpperCase();
+});
+populateAirlineSelect();
+populateAircraftSelect('');
+/* ================= AIRPORT AUTOCOMPLETE ================= */
+const airportInput = document.getElementById('m-airport');
+const airportDropdown = document.getElementById('airport-dropdown');
+
+function renderAirportDropdown(query){
+  const q = query.trim().toLowerCase();
+  let matches;
+  if(!q){
+    matches = AIRPORTS;
+  } else {
+    matches = AIRPORTS.filter(a =>
+      a.iata.toLowerCase().includes(q) ||
+      a.icao.toLowerCase().includes(q) ||
+      a.name.toLowerCase().includes(q)
+    );
+  }
+  if(matches.length === 0){
+    airportDropdown.classList.remove('show');
+    return;
+  }
+  airportDropdown.innerHTML = '';
+  matches.slice(0,8).forEach(a=>{
+    const div = document.createElement('div');
+    div.className = 'ac-item';
+    div.textContent = `${a.iata}/${a.icao} ${a.name}`;
+    div.onclick = ()=>{
+      airportInput.value = `${a.iata}/${a.icao} ${a.name}`;
+      airportDropdown.classList.remove('show');
+    };
+    airportDropdown.appendChild(div);
+  });
+  airportDropdown.classList.add('show');
+}
+airportInput.addEventListener('focus', ()=> renderAirportDropdown(airportInput.value));
+airportInput.addEventListener('input', ()=> renderAirportDropdown(airportInput.value));
+document.addEventListener('click', (e)=>{
+  if(!airportInput.contains(e.target) && !airportDropdown.contains(e.target)){
+    airportDropdown.classList.remove('show');
+  }
+});
+
+/* ================= PHOTO HANDLING (modal) ================= */
+const photozone = document.getElementById('photozone');
+function photoPlaceholder(){
+  return `<input type="file" id="m-photo" accept="image/*" style="display:none"><div class="ph-text">📷 タップして写真を選択</div>`;
+}
+function setupFileInputHandler(input){
+  input.onchange = async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    try{
+      const resized = await compressImage(file);
+      let exifData = null;
+      try{
+        exifData = await exifr.parse(file);
+      }catch(ex){ exifData = null; }
+      openCropOverlay(resized, exifData);
+    }catch(err){
+      alert('写真の読み込みに失敗しました。\n別の写真を選ぶか、もう一度お試しください。\n(' + err.message + ')');
+    }
+  };
+}
+function bindPhotoInput(){
+  const input = document.getElementById('m-photo');
+  photozone.onclick = ()=> input.click();
+  setupFileInputHandler(input);
+}
+function showPhotoPreview(dataUrl){
+  photozone.classList.add('has-img');
+  photozone.innerHTML = `<img src="${dataUrl}"><input type="file" id="m-photo" accept="image/*" style="display:none">`;
+
+  const img = photozone.querySelector('img');
+  const input = document.getElementById('m-photo');
+  setupFileInputHandler(input);
+
+  img.addEventListener('contextmenu', e => e.preventDefault());
+  img.style.webkitTouchCallout = 'none';
+  img.style.webkitUserSelect = 'none';
+  img.style.userSelect = 'none';
+  img.style.pointerEvents = 'none';
+
+  let timer;
+  const start = ()=>{
+    timer = setTimeout(()=>{
+      if(confirm('写真を削除しますか？')){
+        pendingPhoto = null;
+        pendingExif = null;
+        photozone.classList.remove('has-img');
+        photozone.innerHTML = photoPlaceholder();
+        bindPhotoInput();
+      }
+    }, 600);
+  };
+  const cancel = ()=> clearTimeout(timer);
+
+  photozone.onclick = ()=> input.click();
+  photozone.addEventListener('touchstart', start, {once:true});
+  photozone.addEventListener('touchend', cancel, {once:true});
+  photozone.addEventListener('touchmove', cancel, {once:true});
+  photozone.addEventListener('mousedown', start, {once:true});
+  photozone.addEventListener('mouseup', cancel, {once:true});
+  photozone.addEventListener('mouseleave', cancel, {once:true});
+}
+bindPhotoInput();
+
+/* ================= CROP OVERLAY (initial upload only, 3:2) ================= */
+const CROP_OUT_W = 1200;
+const CROP_OUT_H = 800; // 3:2
+
+const cropOverlay = document.getElementById('crop-overlay');
+const cropFrame = document.getElementById('crop-frame');
+const cropImg = document.getElementById('crop-img');
+const cropRotation = document.getElementById('crop-rotation');
+
+let cropState = null; // {imgW, imgH, sCover, zoom, rotation, panX, panY, exif}
+
+function computeSCover(w, h, rotationDeg){
+  const rad = rotationDeg * Math.PI/180;
+  const c = Math.abs(Math.cos(rad)), si = Math.abs(Math.sin(rad));
+  const Wp = w*c + h*si;
+  const Hp = w*si + h*c;
+  return Math.max(CROP_OUT_W / Wp, CROP_OUT_H / Hp);
+}
+
+function openCropOverlay(dataUrl, exifData){
+  cropImg.src = dataUrl;
+  cropImg.onload = ()=>{
+    const imgW = cropImg.naturalWidth;
+    const imgH = cropImg.naturalHeight;
+    cropState = {
+      imgW, imgH,
+      sCover: computeSCover(imgW, imgH, 0),
+      zoom: 1,
+      rotation: 0,
+      panX: CROP_OUT_W/2,
+      panY: CROP_OUT_H/2,
+      exif: exifData
+    };
+    cropRotation.value = 0;
+    renderCrop();
+    cropOverlay.classList.add('show');
+  };
+}
+
+function renderCrop(){
+  if(!cropState) return;
+  const rect = cropFrame.getBoundingClientRect();
+  const previewScale = rect.width / CROP_OUT_W;
+  const s = cropState.sCover * cropState.zoom;
+  const dispW = cropState.imgW * s * previewScale;
+  const dispH = cropState.imgH * s * previewScale;
+  const cx = cropState.panX * previewScale;
+  const cy = cropState.panY * previewScale;
+  cropImg.style.width = dispW + 'px';
+  cropImg.style.height = dispH + 'px';
+  cropImg.style.left = (cx - dispW/2) + 'px';
+  cropImg.style.top = (cy - dispH/2) + 'px';
+  cropImg.style.transformOrigin = 'center center';
+  cropImg.style.transform = `rotate(${cropState.rotation}deg)`;
+}
+
+function clampPan(){
+  const s = cropState.sCover * cropState.zoom;
+  const dispW = cropState.imgW * s;
+  const dispH = cropState.imgH * s;
+  const rad = cropState.rotation * Math.PI/180;
+  const c = Math.abs(Math.cos(rad)), si = Math.abs(Math.sin(rad));
+  const aabbW = dispW*c + dispH*si;
+  const aabbH = dispW*si + dispH*c;
+  cropState.panX = clamp(cropState.panX, CROP_OUT_W - aabbW/2, aabbW/2);
+  cropState.panY = clamp(cropState.panY, CROP_OUT_H - aabbH/2, aabbH/2);
+}
+
+function resetCrop(){
+  if(!cropState) return;
+  cropState.zoom = 1;
+  cropState.rotation = 0;
+  cropState.sCover = computeSCover(cropState.imgW, cropState.imgH, 0);
+  cropState.panX = CROP_OUT_W/2;
+  cropState.panY = CROP_OUT_H/2;
+  cropRotation.value = 0;
+  renderCrop();
+}
+document.getElementById('crop-reset').onclick = resetCrop;
+
+cropRotation.oninput = ()=>{
+  if(!cropState) return;
+  cropState.rotation = parseFloat(cropRotation.value);
+  cropState.sCover = computeSCover(cropState.imgW, cropState.imgH, cropState.rotation);
+  clampPan();
+  renderCrop();
+};
+
+/* ---- pointer gestures: 1-finger pan, 2-finger pinch-zoom + rotate ---- */
+const cropPointers = new Map(); // pointerId -> {x,y}
+let panBaseline = null;   // {x,y, panX, panY}
+let gestureBaseline = null; // {dist, angle, midX, midY, zoom, rotation, panX, panY}
+
+function twoPointerInfo(){
+  const pts = [...cropPointers.values()];
+  const [a,b] = pts;
+  return {
+    dist: Math.hypot(b.x-a.x, b.y-a.y),
+    angle: Math.atan2(b.y-a.y, b.x-a.x) * 180/Math.PI,
+    midX: (a.x+b.x)/2,
+    midY: (a.y+b.y)/2
+  };
+}
+
+function resetGestureBaseline(){
+  if(cropPointers.size === 1){
+    const p = [...cropPointers.values()][0];
+    panBaseline = {x:p.x, y:p.y, panX:cropState.panX, panY:cropState.panY};
+    gestureBaseline = null;
+  } else if(cropPointers.size === 2){
+    const info = twoPointerInfo();
+    gestureBaseline = {
+      ...info,
+      zoom: cropState.zoom,
+      rotation: cropState.rotation,
+      panX: cropState.panX,
+      panY: cropState.panY
+    };
+    panBaseline = null;
+  } else {
+    panBaseline = null;
+    gestureBaseline = null;
+  }
+}
+
+cropFrame.addEventListener('pointerdown', (e)=>{
+  if(!cropState) return;
+  cropFrame.setPointerCapture(e.pointerId);
+  cropPointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  resetGestureBaseline();
+  cropImg.style.cursor = 'grabbing';
+});
+
+cropFrame.addEventListener('pointermove', (e)=>{
+  if(!cropState || !cropPointers.has(e.pointerId)) return;
+  cropPointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  const rect = cropFrame.getBoundingClientRect();
+  const previewScale = rect.width / CROP_OUT_W;
+
+  if(cropPointers.size === 1 && panBaseline){
+    const p = [...cropPointers.values()][0];
+    const dx = (p.x - panBaseline.x) / previewScale;
+    const dy = (p.y - panBaseline.y) / previewScale;
+    cropState.panX = panBaseline.panX + dx;
+    cropState.panY = panBaseline.panY + dy;
+    clampPan();
+    renderCrop();
+  } else if(cropPointers.size === 2 && gestureBaseline){
+    const info = twoPointerInfo();
+    const scaleRatio = info.dist / gestureBaseline.dist;
+
+    cropState.zoom = clamp(gestureBaseline.zoom * scaleRatio, 1, 4);
+    // rotation is controlled via slider only (two-finger rotation disabled)
+
+    const dMidX = (info.midX - gestureBaseline.midX) / previewScale;
+    const dMidY = (info.midY - gestureBaseline.midY) / previewScale;
+    cropState.panX = gestureBaseline.panX + dMidX;
+    cropState.panY = gestureBaseline.panY + dMidY;
+
+    clampPan();
+    renderCrop();
+  }
+});
+
+function cropPointerEnd(e){
+  cropPointers.delete(e.pointerId);
+  cropImg.style.cursor = cropPointers.size ? 'grabbing' : 'grab';
+  resetGestureBaseline();
+}
+cropFrame.addEventListener('pointerup', cropPointerEnd);
+cropFrame.addEventListener('pointercancel', cropPointerEnd);
+
+function closeCropOverlay(){
+  cropOverlay.classList.remove('show');
+  cropState = null;
+  cropPointers.clear();
+  panBaseline = null;
+  gestureBaseline = null;
+}
+
+document.getElementById('crop-cancel').onclick = ()=>{
+  closeCropOverlay();
+};
+
+document.getElementById('crop-confirm').onclick = ()=>{
+  if(!cropState) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = CROP_OUT_W;
+  canvas.height = CROP_OUT_H;
+  const ctx = canvas.getContext('2d');
+  const s = cropState.sCover * cropState.zoom;
+  const dispW = cropState.imgW * s;
+  const dispH = cropState.imgH * s;
+  ctx.save();
+  ctx.translate(cropState.panX, cropState.panY);
+  ctx.rotate(cropState.rotation * Math.PI/180);
+  ctx.drawImage(cropImg, -dispW/2, -dispH/2, dispW, dispH);
+  ctx.restore();
+
+  pendingPhoto = canvas.toDataURL('image/jpeg', 0.85);
+  pendingExif = cropState.exif || null;
+  if(pendingExif){
+    const dt = pendingExif?.DateTimeOriginal || pendingExif?.CreateDate;
+    if(dt){
+      const d = new Date(dt);
+      if(!isNaN(d)){
+        document.getElementById('m-date').value = d.toISOString().slice(0,10);
+      }
+    }
+  }
+  showPhotoPreview(pendingPhoto);
+  closeCropOverlay();
+};
+
+function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+/* ================= MODAL ================= */
+const modalOverlay = document.getElementById('modal-overlay');
+
+function openModal(id){
+  editingId = id;
+  pendingPhoto = undefined;
+  pendingExif = null;
+  const entry = id ? entries.find(e=>e.id===id) : null;
+
+  document.getElementById('modal-title').textContent = entry ? 'Edit sighting' : 'New sighting';
+  document.getElementById('modal-delete').style.display = entry ? 'block' : 'none';
+  document.getElementById('modal-save').textContent = entry ? 'Update' : 'Save';
+
+  document.getElementById('m-reg').value = entry ? (entry.reg||'') : '';
+  document.getElementById('m-date').value = entry ? (entry.date||todayISO()) : todayISO();
+  document.getElementById('m-airline').value = entry ? (entry.airline||'') : '';
+  document.getElementById('m-aircraft').value = entry ? (entry.aircraft||'') : '';
+  populateAircraftSelect(entry ? entry.airline : '', entry ? entry.aircraft : '');
+  document.getElementById('m-airport').value = entry ? (entry.airport||'') : '';
+  document.getElementById('m-spot').value = entry ? (entry.spot||'') : '';
+  document.getElementById('m-notes').value = entry ? (entry.notes||'') : '';
+  document.getElementById('m-special').checked = entry ? !!entry.special : false;
+
+  if(entry && entry.photo){
+    showPhotoPreview(entry.photo);
+  } else {
+    photozone.classList.remove('has-img');
+    photozone.innerHTML = photoPlaceholder();
+    bindPhotoInput();
+  }
+
+  modalOverlay.classList.add('show');
+}
+function closeModal(){
+  modalOverlay.classList.remove('show');
+  editingId = null;
+  pendingPhoto = undefined;
+  airportDropdown.classList.remove('show');
+}
+document.getElementById('modal-close').onclick = closeModal;
+modalOverlay.onclick = (e)=>{ if(e.target===modalOverlay) closeModal(); };
+document.getElementById('fab').onclick = ()=> openModal(null);
+
+document.getElementById('modal-save').onclick = ()=>{
+  const reg = document.getElementById('m-reg').value.trim().toUpperCase();
+  const date = document.getElementById('m-date').value || todayISO();
+  const airline = document.getElementById('m-airline').value.trim().toUpperCase();
+  const aircraft = document.getElementById('m-aircraft').value.trim().toUpperCase();
+  const airport = document.getElementById('m-airport').value.trim();
+  const spot = document.getElementById('m-spot').value.trim();
+  const notes = document.getElementById('m-notes').value.trim();
+  const special = document.getElementById('m-special').checked;
+
+  if(!reg && !aircraft && !airline){
+    alert('レジ番号・航空会社・機種のいずれかは入力してください');
+    return;
+  }
+  if(reg){
+    const dup = entries.find(e=>e.reg===reg && e.id!==editingId);
+    if(dup){
+      alert('既に登録済みのレジです: ' + reg);
+      openModal(dup.id);
+      return;
+    }
+  }
+
+  if(editingId){
+    const entry = entries.find(e=>e.id===editingId);
+    Object.assign(entry, {reg, date, airline, aircraft, airport, spot, notes, special});
+    if(pendingExif) entry.exif = pendingExif;
+    if(pendingPhoto === null){
+      entry.photo = null;
+      delete entry.focal;
+    } else if(pendingPhoto){
+      entry.photo = pendingPhoto;
+      delete entry.focal; // newly cropped photo is already 3:2
+    }
+  } else {
+    entries.unshift({
+      id: Date.now() + '-' + Math.random().toString(36).slice(2,7),
+      reg, date, airline, aircraft, airport, spot, notes, special,
+      photo: pendingPhoto || null,
+      exif: pendingExif || null,
+      _ts: Date.now()
+    });
+  }
+  save();
+  closeModal();
+  render();
+};
+
+document.getElementById('modal-delete').onclick = ()=>{
+  if(!editingId) return;
+  const entry = entries.find(e=>e.id===editingId);
+  openConfirm(entry, ()=>{
+    entries = entries.filter(e=>e.id!==editingId);
+    save();
+    closeModal();
+    render();
+  });
+};
+
+/* ================= DELETE CONFIRM ================= */
+const confirmOverlay = document.getElementById('confirm-overlay');
+let confirmCallback = null;
+function openConfirm(entry, onConfirm){
+  document.getElementById('confirm-reg').textContent = entry.reg || entry.aircraft || '(no reg)';
+  confirmCallback = onConfirm;
+  confirmOverlay.classList.add('show');
+}
+document.getElementById('confirm-cancel').onclick = ()=> confirmOverlay.classList.remove('show');
+document.getElementById('confirm-ok').onclick = ()=>{
+  confirmOverlay.classList.remove('show');
+  if(confirmCallback) confirmCallback();
+};
+
+/* ================= SORT ================= */
+const SORT_OPTIONS = [
+  { key:'added', label:'登録順(新しい順)', short:'新着' },
+  { key:'reg', label:'Registration', short:'レジ' },
+  { key:'date', label:'Date', short:'日付' }
+];
+
+function loadSortPref(){
+  try{
+    const raw = localStorage.getItem('spotterlog-sort');
+    if(raw){
+      const obj = JSON.parse(raw);
+      sortKey = obj.key || 'added';
+      sortDir = obj.dir || 'desc';
+    }
+  }catch(e){}
+}
+function saveSortPref(){
+  try{ localStorage.setItem('spotterlog-sort', JSON.stringify({key:sortKey, dir:sortDir})); }catch(e){}
+}
+
+const sortDropdown = document.getElementById('sort-dropdown');
+
+function setSort(key){
+  if(sortKey === key){
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortKey = key;
+    sortDir = (key === 'added' || key === 'date' || key === 'special') ? 'desc' : 'asc';
+  }
+  saveSortPref();
+  renderSortDropdown();
+  renderTabbar();
+  render();
+}
+
+function renderSortDropdown(){
+  sortDropdown.innerHTML = '';
+  SORT_OPTIONS.forEach(opt=>{
+    const div = document.createElement('div');
+    div.className = 'sort-item' + (sortKey === opt.key ? ' active' : '');
+    const dirSymbol = sortKey === opt.key ? (sortDir === 'asc' ? '▲ ASC' : '▼ DESC') : '';
+    div.innerHTML = `<span>${opt.label}</span><span class="dir">${dirSymbol}</span>`;
+    div.onclick = ()=> setSort(opt.key);
+    sortDropdown.appendChild(div);
+  });
+}
+
+const tabbarEl = document.getElementById('tabbar');
+function renderTabbar(){
+  tabbarEl.innerHTML = '';
+  SORT_OPTIONS.forEach(opt=>{
+    const div = document.createElement('div');
+    const active = sortKey === opt.key;
+    div.className = 'tab' + (active ? ' active' : '');
+    const dirSymbol = active ? (sortDir === 'asc' ? '▲' : '▼') : '';
+    div.innerHTML = `<span>${opt.short}</span>${dirSymbol ? `<span class="dir">${dirSymbol}</span>` : ''}`;
+    div.onclick = ()=> setSort(opt.key);
+    tabbarEl.appendChild(div);
+  });
+}
+
+/* ================= SEARCH MODE TOGGLE ================= */
+const searchToggleBtn = document.getElementById('search-toggle-btn');
+const searchBox = document.getElementById('search-box');
+const searchClearBtn = document.getElementById('search-clear-btn');
+const searchInput = document.getElementById('search');
+
+function enterSearchMode(){
+  tabbarEl.style.display = 'none';
+  searchToggleBtn.style.display = 'none';
+  searchBox.style.display = 'flex';
+  searchInput.focus();
+}
+function exitSearchMode(){
+  searchInput.value = '';
+  searchBox.style.display = 'none';
+  tabbarEl.style.display = 'flex';
+  searchToggleBtn.style.display = 'flex';
+  render();
+}
+
+searchToggleBtn.onclick = enterSearchMode;
+searchClearBtn.onclick = exitSearchMode;
+
+function sortEntries(list){
+  const dirMul = sortDir === 'asc' ? 1 : -1;
+  const collator = (a,b) => (a||'').localeCompare(b||'', 'ja');
+  return list.slice().sort((a,b)=>{
+    switch(sortKey){
+      case 'reg': return collator(a.reg, b.reg) * dirMul;
+      case 'date': return ((a.date||'').localeCompare(b.date||'')) * dirMul;
+      case 'aircraft': return collator(a.aircraft, b.aircraft) * dirMul;
+      case 'airline': return collator(a.airline, b.airline) * dirMul;
+      case 'airport': return collator(a.airport, b.airport) * dirMul;
+      case 'special': {
+        const ra = a.special ? 1 : 0, rb = b.special ? 1 : 0;
+        if(ra !== rb) return (rb - ra) * (sortDir==='asc' ? -1 : 1);
+        return (b._ts||0) - (a._ts||0);
+      }
+      case 'added':
+      default:
+        return ((b._ts||0) - (a._ts||0)) * (sortDir==='desc' ? 1 : -1);
+    }
+  });
+}
+
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function render(){
+  const regs = new Set(entries.map(e=>e.reg).filter(Boolean));
+  const aircraftTypes = new Set(entries.map(e=>e.aircraft).filter(Boolean));
+  const carriers = new Set(entries.map(e=>e.airline).filter(Boolean));
+  const rares = entries.filter(e=>e.special).length;
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${regs.size}</div><div class="label">REGS</div></div>
+    <div class="stat"><div class="num">${aircraftTypes.size}</div><div class="label">TYPES</div></div>
+    <div class="stat"><div class="num">${carriers.size}</div><div class="label">CARRIER</div></div>
+    <div class="stat"><div class="num">${rares}</div><div class="label">SPECIAL</div></div>
+  `;
+
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  let shown = sortEntries(entries);
+  if(q){
+    const terms = q.split(/\s+/).filter(Boolean);
+    shown = shown.filter(e=>{
+      const haystack = [e.reg, e.aircraft, e.airline, e.airport, e.notes, e.spot, JSON.stringify(e.exif||{})]
+        .concat(e.special ? ['スペマ'] : [])
+        .filter(Boolean).join(' ').toLowerCase();
+      return terms.every(t => haystack.includes(t));
+    });
+  }
+
+  const grid = document.getElementById('grid');
+  if(shown.length === 0){
+    grid.innerHTML = `<div class="empty">記録がありません。<br>右下の + ボタンから最初の1機を記録しましょう。</div>`;
+    return;
+  }
+
+  grid.innerHTML = '';
+  shown.forEach(e=>{
+    const card = document.createElement('div');
+    card.className = 'card' + (e.special ? ' special' : '');
+    const focalStyle = e.focal ? ` style="object-position:${e.focal.x}% ${e.focal.y}%"` : '';
+    card.innerHTML = `
+      <div class="thumb">${e.photo ? `<img src="${e.photo}" loading="lazy"${focalStyle}>` : '<div class="placeholder">✈</div>'}</div>
+      <div class="info">
+        <span class="reg">${escapeHtml(e.reg || '— — —')}</span>
+        <span class="aircraft">${escapeHtml(e.aircraft || '')}</span>
+        <span class="airline">${escapeHtml(e.airline || '')}</span>
+        ${e.special ? '<span class="special-star">★</span>' : ''}
+      </div>
+    `;
+
+    card.addEventListener('contextmenu', (ev)=> ev.preventDefault());
+    card.addEventListener('dragstart', (ev)=> ev.preventDefault());
+
+    // tap -> edit
+    card.addEventListener('click', (ev)=>{
+      if(card.dataset.longpress === '1'){ card.dataset.longpress = '0'; return; }
+      openModal(e.id);
+    });
+
+    // long press -> delete confirm
+    let timer;
+    const start = ()=>{
+      timer = setTimeout(()=>{
+        card.dataset.longpress = '1';
+        openConfirm(e, ()=>{
+          entries = entries.filter(en=>en.id!==e.id);
+          save();
+          render();
+        });
+      }, 550);
+    };
+    const cancel = ()=> clearTimeout(timer);
+    card.addEventListener('touchstart', start);
+    card.addEventListener('touchend', cancel);
+    card.addEventListener('touchmove', cancel);
+    card.addEventListener('mousedown', start);
+    card.addEventListener('mouseup', cancel);
+    card.addEventListener('mouseleave', cancel);
+
+    grid.appendChild(card);
+  });
+}
+document.getElementById('search').addEventListener('input', render);
+
+/* ================= EXPORT / IMPORT ================= */
+document.getElementById('export-btn').onclick = ()=>{
+  const payload = {
+    app: 'spotter_log',
+    version: '0.1',
+    exportedAt: new Date().toISOString(),
+    entries
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'spotter_log.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  localStorage.setItem(BACKUP_KEY, new Date().toISOString());
+  renderBackupLine();
+  toast('spotter_log.json を書き出しました');
+};
+
+document.getElementById('import-file').onchange = (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      const imported = Array.isArray(data) ? data : data.entries;
+      if(!Array.isArray(imported)) throw new Error('JSON形式が不正です(entries配列が見つかりません)');
+      const existingIds = new Set(entries.map(en=>en.id));
+      let added = 0, skipped = 0;
+      imported.forEach(en=>{
+        if(en && en.id && !existingIds.has(en.id)){
+          entries.push(en);
+          existingIds.add(en.id);
+          added++;
+        } else {
+          skipped++;
+        }
+      });
+      save();
+      render();
+      toast(`${added}件読み込み (重複${skipped}件はスキップ)`);
+    }catch(err){
+      alert('読み込みに失敗しました: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+loadSortPref();
+renderSortDropdown();
+renderTabbar();
+load();
+</script>
+</body>
+</html>
