@@ -1066,7 +1066,7 @@ function loadHtmlImage(file){
 }
 
 async function compressImage(file){
-  const maxDim = 1280;
+  const maxDim = 3000;
   const attempts = [];
 
   // Strategy 1: createImageBitmap, default
@@ -1117,7 +1117,7 @@ async function compressImage(file){
         lastErr = new Error('黒画像(デコード失敗)');
         continue;
       }
-      return canvas.toDataURL('image/jpeg', 0.85);
+      return canvas.toDataURL('image/jpeg', 0.9);
     }catch(e){
       lastErr = e;
     }
