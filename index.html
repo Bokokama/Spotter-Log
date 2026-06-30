@@ -852,21 +852,21 @@ let longPressTimer = null;
 let sortKey = 'added';   // 'added' | 'reg' | 'date' | 'aircraft' | 'airline' | 'special'
 let sortDir = 'desc';    // 'asc' | 'desc'
 
-const AIRLINES = ['ANA','JAL','ORC','SKY','JJP','APJ','SNA','SFJ','FDA','JAC','AMX','ADO','IBX'];
+const AIRLINES = ['JAL','ANA','SKY','JJP','APJ','SNJ','ADO','SFJ','FDA','JAC','ORC','AHX','IBX'];
 
 const AIRLINE_AIRCRAFT = {
-  ANA: ['B738','A20N','A21N','DH8D','B763','B772','B77W','B788','B789','B78X'],
-  JAL: ['B738','B763','B788','B789','A359','A35K','E170','E190','AT46','AT76'],
-  ORC: ['AT46'],
-  SKY: ['B738'],
+  JAL: ['B738','B38M','B763','B788','B789','A359','A35K','E170','E190','AT46','AT76'],
+  ANA: ['B738','B38M','B763','B772','B77W','B788','B789','B78X','A20N','A21N','DH8D','A388'],
+  SKY: ['B738','B38M'],
   JJP: ['A20N'],
   APJ: ['A20N'],
-  SNA: ['B738'],
+  SNJ: ['B738'],
+  ADO: ['B737','B738'],
   SFJ: ['A20N'],
   FDA: ['E170','E75L'],
   JAC: ['AT46','AT76'],
-  AMX: ['AT46'],
-  ADO: ['B737','B738'],
+  ORC: ['AT46'],
+  AHX: ['AT46'],
   IBX: ['CRJ7']
 };
 const ALL_AIRCRAFT = [...new Set(Object.values(AIRLINE_AIRCRAFT).flat())].sort();
@@ -874,6 +874,7 @@ const ALL_AIRCRAFT = [...new Set(Object.values(AIRLINE_AIRCRAFT).flat())].sort()
 const AIRCRAFT_NAMES = {
   B737: '737-700',
   B738: '737-800',
+  B38M: '737-MAX',
   A20N: 'A320neo',
   A21N: 'A321neo',
   DH8D: 'Dash 8-400 / Q400',
@@ -885,6 +886,7 @@ const AIRCRAFT_NAMES = {
   B78X: '787-10',
   A359: 'A350-900',
   A35K: 'A350-1000',
+  A388: 'A380-800',
   E170: 'Embraer E170',
   E75L: 'Embraer E175',
   E190: 'Embraer E190',
@@ -1066,7 +1068,7 @@ function loadHtmlImage(file){
 }
 
 async function compressImage(file){
-  const maxDim = 3000;
+  const maxDim = 4000;
   const attempts = [];
 
   // Strategy 1: createImageBitmap, default
@@ -1277,8 +1279,8 @@ function showPhotoPreview(dataUrl){
 bindPhotoInput();
 
 /* ================= CROP OVERLAY (initial upload only, 3:2) ================= */
-const CROP_OUT_W = 1800;
-const CROP_OUT_H = 1200; // 3:2
+const CROP_OUT_W = 2400;
+const CROP_OUT_H = 1600; // 3:2
 
 const cropOverlay = document.getElementById('crop-overlay');
 const cropFrame = document.getElementById('crop-frame');
