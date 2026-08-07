@@ -1,7 +1,0 @@
-{
-  "name": "spotter-log-pwa",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": { "dev": "vite", "build": "vite", "preview": "vite preview" },
-  "devDependencies": { "vite": "^7.1.3" }
-}
