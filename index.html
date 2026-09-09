@@ -305,17 +305,35 @@ function updateEditorView(){
 }
 function editorReset(){editor.angle=0;editor.zoom=1;editor.x=0;editor.y=0;render()}
 function applyEditor(){
- const m=editorMetrics();if(!m)return;
- const out=document.createElement("canvas");out.width=1200;out.height=800;
- const ctx=out.getContext("2d"),rad=editor.angle*Math.PI/180;
- // CSS preview and output share the same crop-center coordinate system.
- const sx=editor.baseScale*editor.zoom;
- const px=editor.x/m.fw*1200,py=editor.y/m.fh*800;
- ctx.translate(600+px,400+py);ctx.rotate(rad);ctx.scale(sx*1200/m.fw,sx*1200/m.fw);
- ctx.drawImage(editor.img,-m.w/2,-m.h/2);
- editor.u.photo=out.toDataURL("image/jpeg",.82);editor.u.spotted=true;
- db.shots[s.reg]=editor.u;save();
- URL.revokeObjectURL(editor.src);editor=null;s.editorReturn=false;s.modal=1;render();
+ try{
+  const m=editorMetrics();
+  if(!m)return;
+  const out=document.createElement("canvas");
+  out.width=1200;
+  out.height=800;
+  const ctx=out.getContext("2d");
+  const rad=editor.angle*Math.PI/180;
+  // CSS preview and output share the same crop-center coordinate system.
+  const sx=editor.baseScale*editor.zoom;
+  const px=editor.x/m.fw*1200;
+  const py=editor.y/m.fh*800;
+  ctx.translate(600+px,400+py);
+  ctx.rotate(rad);
+  ctx.scale(sx*1200/m.fw,sx*1200/m.fw);
+  ctx.drawImage(editor.img,-m.w/2,-m.h/2);
+  editor.u.photo=out.toDataURL("image/jpeg",.82);
+  editor.u.spotted=true;
+  db.shots[s.reg]=editor.u;
+  save();
+  URL.revokeObjectURL(editor.src);
+  editor=null;
+  s.editorReturn=false;
+  s.modal=1;
+  render();
+ }catch(err){
+  console.error("写真保存エラー:",err);
+  alert("写真の保存に失敗しました。\n\n"+err.name+"\n"+err.message);
+ }
 }
 function editorPointerSetup(){
  const frame=document.querySelector("#crop-frame");if(!frame||!editor)return;
