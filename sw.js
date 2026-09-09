@@ -1,4 +1,4 @@
-const CACHE_NAME = "regi-atsume-v1.3.5";
+const CACHE_NAME = "regi-atsume-v1.4";
 
 const APP_SHELL = [
   "./",
