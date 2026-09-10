@@ -126,6 +126,10 @@ async function deletePhoto(reg){
   tx.onerror=()=>reject(tx.error);
  });
 }
+ async function photoURL(reg){
+ const blob=await loadPhoto(reg);
+ return blob?URL.createObjectURL(blob):"";
+}
 const save=()=>localStorage.setItem(K,JSON.stringify(db));
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const shot=p=>db.shots[p.Registration]||{},got=p=>!!(shot(p).photo||shot(p).spotted);
