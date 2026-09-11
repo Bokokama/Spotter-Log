@@ -65,7 +65,7 @@ button,input,select{font:inherit}button{color:inherit;background:none;border:0;c
 "use strict";
 
 /* =========================================================
-   れじあつめ v1.4
+   れじあつめ v1.5
    Data layer:
      localStorage -> aircraft / airport / spotting metadata
      IndexedDB    -> cropped photo Blob only
@@ -221,7 +221,7 @@ async function photoURL(reg){
 }
 
 /* Remove any legacy Base64 photo value if encountered.
-   v1.4 never writes photo data into localStorage. */
+   v1.5 never writes photo data into localStorage. */
 function stripLegacyPhotoData(){
   let changed=false;
   for(const reg of Object.keys(db.shots||{})){
@@ -523,7 +523,7 @@ function filterPlanes(list){
 function head(title,sub="航空機コレクション"){
   return `<header class=top>
     <div>
-      <h1><span class="app-title">れじあつめ</span> <span class="version">v1.4</span></h1>
+      <h1><span class="app-title">れじあつめ</span> <span class="version">v1.5</span></h1>
       <div class=sub>${sub}</div>
     </div>
     <button class=btn data-a=menu>☰</button>
