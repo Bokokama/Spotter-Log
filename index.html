@@ -456,7 +456,7 @@ async function backupJSON(){
     const photos=await getAllPhotos();
     const backup={
       format:"regi-atsume-backup",
-      version:"1.4",
+      version:"1.5",
       exportedAt:new Date().toISOString(),
       data:JSON.parse(JSON.stringify(db)),
       photos
