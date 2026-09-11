@@ -388,34 +388,43 @@ function dataURLToBlob(dataURL){
 
   return new Blob([bytes],{type:mime});
 }
-
+   
 function getAllPhotos(){
   return openPhotoDB().then(database=>new Promise((resolve,reject)=>{
     const tx=database.transaction(IDB_STORE,"readonly");
     const store=tx.objectStore(IDB_STORE);
-    const req=store.openCursor();
-    const photos=[];
+    const req=store.getAll();
+    const keyReq=store.getAllKeys();
 
-    req.onsuccess=async e=>{
-      const cursor=e.target.result;
-
-      if(!cursor){
-        resolve(photos);
-        return;
-      }
-
+    Promise.all([
+      new Promise((res,rej)=>{
+        keyReq.onsuccess=()=>res(keyReq.result||[]);
+        keyReq.onerror=()=>rej(
+          keyReq.error||new Error("写真キーの取得に失敗しました")
+        );
+      }),
+      new Promise((res,rej)=>{
+        req.onsuccess=()=>res(req.result||[]);
+        req.onerror=()=>rej(
+          req.error||new Error("写真データの取得に失敗しました")
+        );
+      })
+    ]).then(async ([keys,blobs])=>{
       try{
-        photos.push({
-          reg:String(cursor.key),
-          data:await blobToDataURL(cursor.value)
-        });
-        cursor.continue();
+        const photos=[];
+
+        for(let i=0;i<Math.min(keys.length,blobs.length);i++){
+          photos.push({
+            reg:String(keys[i]),
+            data:await blobToDataURL(blobs[i])
+          });
+        }
+
+        resolve(photos);
       }catch(err){
         reject(err);
       }
-    };
-
-    req.onerror=()=>reject(req.error||new Error("写真のバックアップに失敗しました"));
+    }).catch(reject);
   }));
 }
 
