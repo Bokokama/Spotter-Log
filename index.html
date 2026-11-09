@@ -1070,17 +1070,20 @@ app.addEventListener("click",async e=>{
   render();
 });
 
-app.addEventListener("input",e=>{
-  if(e.target.id==="rotate-range"&&editor){
-    editor.angle=Number(e.target.value);
-    updateEditorView();
-    return;
-  }
-  
-  if(e.target.dataset.free!==undefined){
+if(e.target.dataset.free!==undefined){
     state.freeQ=e.target.value;
-    // render() を呼ばず、一覧リスト部分だけを更新する、または状態だけ保持する
-    // ※リストの再描画が必要な場合は、フォーカスが外れない別の工夫が必要です
+    
+    // 入力中のフォーカスとカーソル位置を保持して再描画する
+    const selectionStart = e.target.selectionStart;
+    const selectionEnd = e.target.selectionEnd;
+    
+    render();
+    
+    const newActive = document.querySelector("[data-free]");
+    if(newActive){
+      newActive.focus();
+      newActive.setSelectionRange(selectionStart, selectionEnd);
+    }
     return;
   }
   
