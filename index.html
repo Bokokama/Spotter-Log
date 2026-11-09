@@ -405,7 +405,7 @@ async function backupJSON(){
     const photos=await getAllPhotos();
     const backup={
       format:"regi-atsume-backup",
-      version:"1.5",
+      version:"1.6",
       exportedAt:new Date().toISOString(),
       data:JSON.parse(JSON.stringify(db)),
       photos
@@ -465,7 +465,7 @@ function filterPlanes(list){
 function head(title,sub="航空機コレクション"){
   return `<header class=top>
     <div>
-      <h1><span class="app-title">れじあつめ</span> <span class="version">v1.5</span></h1>
+      <h1><span class="app-title">れじあつめ</span> <span class="version">v1.6</span></h1>
       <div class=sub>${sub}</div>
     </div>
     <button class=btn data-a=menu>☰</button>
