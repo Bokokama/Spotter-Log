@@ -1076,11 +1076,16 @@ app.addEventListener("input",e=>{
     updateEditorView();
     return;
   }
+  
   if(e.target.dataset.free!==undefined){
     state.freeQ=e.target.value;
-    render();
+    // render() を呼ばず、一覧リスト部分だけを更新する、または状態だけ保持する
+    // ※リストの再描画が必要な場合は、フォーカスが外れない別の工夫が必要です
     return;
   }
+  
+  // レジ検索側の処理...
+});
   if(e.target.id==="airport"){
     const q=e.target.value.toUpperCase();
     e.target.value=q;
