@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reji-atsume-v2.5';
+const CACHE_NAME = 'index;
 const urlsToCache = [
   './',
   './index.html'
