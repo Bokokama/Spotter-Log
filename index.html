@@ -894,6 +894,17 @@
     document.getElementById('search-input').oninput = render;
 
     render();
+  <script>
+    // Service Worker 登録
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then((reg) => console.log('SW registered: ', reg))
+          .catch((err) => console.log('SW registration failed: ', err));
+      });
+    }
+    
+    // （既存のスクリプト...）
   </script>
 </body>
 </html>
