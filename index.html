@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#071d36">
 <link rel="manifest" href="./manifest.webmanifest">
-<title>れじあつめ v1.5</title>
+<title>れじあつめ v1.6</title>
 <style>
 :root{--bg:#323232;--panel:#3a3a3a;--text:#fff;--muted:#d0d0d0;--accent:#6482C8;--ok:#55d6a5;--line:#555}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif}
-button,input,select{font:inherit}button{color:inherit;background:none;border:0;cursor:pointer}
+button,input,select,textarea{font:inherit}button{color:inherit;background:none;border:0;cursor:pointer}
 .wrap{max-width:1100px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .top h1{margin:0;font-size:25px}.app-title{font-family:"M PLUS Rounded 1c",sans-serif;font-weight:700}
 .version{font-family:system-ui;font-size:11px;font-weight:500;color:var(--muted);margin-left:7px}
@@ -33,7 +33,7 @@ button,input,select{font:inherit}button{color:inherit;background:none;border:0;c
 .hero.placeholder{height:240px;display:grid;place-items:center;font-size:48px;color:#58748d}.body{padding:17px}.fields{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0}
 .field{border-top:1px solid var(--line);padding-top:8px}.field small{display:block;color:var(--muted);font-size:11px}.field div{margin-top:3px}
 .modal{position:fixed;inset:0;background:#0009;display:grid;place-items:end center;padding:10px}.sheet{width:min(560px,100%);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
-.sheet label{display:block;margin:10px 0;color:var(--muted);font-size:12px}.sheet input{width:100%;margin-top:5px;background:#3a3a3a!important;border:1px solid var(--line);border-radius:9px;color:#fff;padding:10px}
+.sheet label{display:block;margin:10px 0;color:var(--muted);font-size:12px}.sheet input,.sheet textarea{width:100%;margin-top:5px;background:#3a3a3a!important;border:1px solid var(--line);border-radius:9px;color:#fff;padding:10px}
 .sheet input:disabled{opacity:1}.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 .search-candidates,#airport-results{display:grid;gap:5px;margin:-5px 0 10px}.candidate,.airport-candidate{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#6482C8;border:1px solid #7f9cda;border-radius:8px;padding:9px 12px;text-align:left;color:#fff}
 .candidate b,.airport-candidate b{font-size:14px}.candidate span,.airport-candidate span{color:#fff;font-size:11px;opacity:.9}
@@ -64,15 +64,6 @@ button,input,select{font:inherit}button{color:inherit;background:none;border:0;c
 <script>
 "use strict";
 
-/* =========================================================
-   れじあつめ v1.5
-   Data layer:
-     localStorage -> aircraft / airport / spotting metadata
-     IndexedDB    -> cropped photo Blob only
-   Backup:
-     JSON export/import includes IndexedDB photos as Base64 only during transfer
-   ========================================================= */
-
 const F=["Registration","Airline","ICAO4","Status","Registered Date","Livery","Livery Name"];
 const STORAGE_KEY="spotter-log-v2";
 const IDB_NAME="regi-atsume-db";
@@ -88,6 +79,7 @@ let state={
   type:"",
   reg:"",
   q:"",
+  freeQ:"",
   filter:["active"],
   menu:false
 };
@@ -95,10 +87,6 @@ let state={
 let editor=null;
 let restoringHistory=false;
 let renderToken=0;
-
-/* -----------------------------
-   Basic data / localStorage
------------------------------ */
 
 function loadDatabase(){
   try{
@@ -148,10 +136,6 @@ const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({
 const pct=(a,b)=>b?Math.round(a/b*100):0;
 const agg=a=>[a.length,a.filter(hasCollection).length];
 
-/* -----------------------------
-   IndexedDB photo repository
------------------------------ */
-
 function openPhotoDB(){
   return new Promise((resolve,reject)=>{
     if(idb){
@@ -161,27 +145,22 @@ function openPhotoDB(){
       }
       idb=null;
     }
-
     if(!("indexedDB" in window)){
       reject(new Error("このブラウザではIndexedDBを利用できません"));
       return;
     }
-
     const req=indexedDB.open(IDB_NAME,IDB_VERSION);
-
     req.onupgradeneeded=e=>{
       const database=e.target.result;
       if(!database.objectStoreNames.contains(IDB_STORE)){
         database.createObjectStore(IDB_STORE);
       }
     };
-
     req.onsuccess=e=>{
       idb=e.target.result;
       idb.onversionchange=()=>idb.close();
       resolve(idb);
     };
-
     req.onerror=()=>reject(req.error||new Error("IndexedDBを開けませんでした"));
   });
 }
@@ -220,8 +199,6 @@ async function photoURL(reg){
   return blob?URL.createObjectURL(blob):"";
 }
 
-/* Remove any legacy Base64 photo value if encountered.
-   v1.5 never writes photo data into localStorage. */
 function stripLegacyPhotoData(){
   let changed=false;
   for(const reg of Object.keys(db.shots||{})){
@@ -235,10 +212,6 @@ function stripLegacyPhotoData(){
 }
 stripLegacyPhotoData();
 
-/* -----------------------------
-   Navigation / history
------------------------------ */
-
 function historyState(){
   return {
     page:state.page,
@@ -250,23 +223,15 @@ function historyState(){
 
 function nav(to,push=true){
   state={...state,...to};
-
   if(push && !restoringHistory){
     const hash=encodeURIComponent(JSON.stringify(historyState()));
     history.pushState(historyState(),"",location.href.split("#")[0]+"#"+hash);
   }
-
   render();
 }
 
 function topNav(){
-  nav({page:"airlines",airline:"",type:"",reg:"",q:"",menu:false});
-}
-
-function backNav(){
-  if(state.page==="types")nav({page:"airlines",airline:"",type:"",reg:""});
-  else if(state.page==="planes")nav({page:"types",type:"",reg:""});
-  else if(state.page==="detail")nav({page:"planes",reg:""});
+  nav({page:"airlines",airline:"",type:"",reg:"",q:"",freeQ:"",menu:false});
 }
 
 window.addEventListener("popstate",e=>{
@@ -278,7 +243,6 @@ window.addEventListener("popstate",e=>{
     render();
     return;
   }
-
   if(location.hash){
     try{
       const st=JSON.parse(decodeURIComponent(location.hash.slice(1)));
@@ -296,26 +260,18 @@ if(!history.state){
   );
 }
 
-/* -----------------------------
-   CSV / airport helpers
------------------------------ */
-
 function airportName(a){
   return a.Name||a["地名"]||a["名"]||a["Airport"]||a["空港名"]||"";
 }
-
 function airportIATA(a){
   return a.IATA||a["IATA 3レター"]||"";
 }
-
 function airportICAO(a){
   return a.ICAO||a["ICAO 4レター"]||"";
 }
-
 function airportLabel(a){
   return `${airportName(a)}（${airportIATA(a)}/${airportICAO(a)}）`;
 }
-
 function airportHits(q){
   q=String(q||"").trim().toUpperCase();
   return db.airports.filter(a=>[
@@ -326,10 +282,8 @@ function airportHits(q){
 function parseCSV(text){
   const rows=[];
   let row=[],cell="",quoted=false;
-
   for(let i=0;i<text.length;i++){
     const c=text[i];
-
     if(c=='"'){
       if(quoted && text[i+1]=='"'){
         cell+='"';
@@ -350,12 +304,10 @@ function parseCSV(text){
       cell+=c;
     }
   }
-
   if(cell||row.length){
     row.push(cell);
     if(row.some(x=>x.trim()))rows.push(row);
   }
-
   return rows;
 }
 
@@ -379,47 +331,37 @@ function blobToDataURL(blob){
 function dataURLToBlob(dataURL){
   const m=String(dataURL||"").match(/^data:([^;,]+)?;base64,(.*)$/s);
   if(!m)throw new Error("バックアップ内の画像データが不正です");
-
   const mime=m[1]||"application/octet-stream";
   const bin=atob(m[2]);
   const bytes=new Uint8Array(bin.length);
-
   for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
-
   return new Blob([bytes],{type:mime});
 }
-   
+
 function getAllPhotos(){
   return openPhotoDB().then(database=>new Promise((resolve,reject)=>{
     const tx=database.transaction(IDB_STORE,"readonly");
     const store=tx.objectStore(IDB_STORE);
     const req=store.getAll();
     const keyReq=store.getAllKeys();
-
     Promise.all([
       new Promise((res,rej)=>{
         keyReq.onsuccess=()=>res(keyReq.result||[]);
-        keyReq.onerror=()=>rej(
-          keyReq.error||new Error("写真キーの取得に失敗しました")
-        );
+        keyReq.onerror=()=>rej(keyReq.error||new Error("写真キーの取得に失敗しました"));
       }),
       new Promise((res,rej)=>{
         req.onsuccess=()=>res(req.result||[]);
-        req.onerror=()=>rej(
-          req.error||new Error("写真データの取得に失敗しました")
-        );
+        req.onerror=()=>rej(req.error||new Error("写真データの取得に失敗しました"));
       })
     ]).then(async ([keys,blobs])=>{
       try{
         const photos=[];
-
         for(let i=0;i<Math.min(keys.length,blobs.length);i++){
           photos.push({
             reg:String(keys[i]),
             data:await blobToDataURL(blobs[i])
           });
         }
-
         resolve(photos);
       }catch(err){
         reject(err);
@@ -442,7 +384,6 @@ function restorePhotos(photos){
   return openPhotoDB().then(database=>new Promise((resolve,reject)=>{
     const tx=database.transaction(IDB_STORE,"readwrite");
     const store=tx.objectStore(IDB_STORE);
-
     try{
       for(const item of photos){
         if(!item || !item.reg || !item.data)continue;
@@ -453,7 +394,6 @@ function restorePhotos(photos){
       reject(err);
       return;
     }
-
     tx.oncomplete=resolve;
     tx.onerror=()=>reject(tx.error||new Error("写真の復元に失敗しました"));
     tx.onabort=()=>reject(tx.error||new Error("写真の復元が中断されました"));
@@ -470,19 +410,10 @@ async function backupJSON(){
       data:JSON.parse(JSON.stringify(db)),
       photos
     };
-
-    downloadBlob(
-      "Regi-Atsume-backup.json",
-      JSON.stringify(backup),
-      "application/json"
-    );
+    downloadBlob("Regi-Atsume-backup.json",JSON.stringify(backup),"application/json");
   }catch(err){
     console.error("JSONバックアップエラー:",err);
-    alert(
-      "JSONバックアップに失敗しました。\\n\\n"+
-      (err.name||"Error")+"\\n"+
-      (err.message||String(err))
-    );
+    alert("JSONバックアップに失敗しました。\n\n"+(err.name||"Error")+"\n"+(err.message||String(err)));
   }
 }
 
@@ -495,12 +426,14 @@ function downloadBlob(name,data,type){
   setTimeout(()=>URL.revokeObjectURL(url),0);
 }
 
-/* -----------------------------
-   Filtering / UI rendering
------------------------------ */
-
 function filterPlanes(list){
   return list.filter(p=>{
+    if(state.freeQ){
+      const fq=state.freeQ.toUpperCase();
+      const matchFree=[p.Registration, p.Airline, p.ICAO4, p["Livery Name"]].some(v=>String(v||"").toUpperCase().includes(fq));
+      if(!matchFree) return false;
+    }
+
     if(state.filter.includes("all"))return true;
 
     const statusFilters=state.filter.filter(x=>["active","planned","retired"].includes(x));
@@ -552,34 +485,23 @@ function breadcrumbs(){
   const sep=`<span class="crumb-sep">›</span>`;
 
   if(state.page==="types"){
-    return `<nav class=breadcrumbs>
-      ${link("TOP","crumb-top")}${sep}
-      <span class="crumb current">${esc(state.airline)}</span>
-    </nav>`;
+    return `<nav class=breadcrumbs>${link("TOP","crumb-top")}${sep}<span class="crumb current">${esc(state.airline)}</span></nav>`;
   }
-
   if(state.page==="planes"){
-    return `<nav class=breadcrumbs>
-      ${link("TOP","crumb-top")}${sep}
-      ${link(state.airline,"crumb-airline")}${sep}
-      <span class="crumb current">${esc(state.type)}</span>
-    </nav>`;
+    return `<nav class=breadcrumbs>${link("TOP","crumb-top")}${sep}${link(state.airline,"crumb-airline")}${sep}<span class="crumb current">${esc(state.type)}</span></nav>`;
   }
-
   if(state.page==="detail"){
-    return `<nav class=breadcrumbs>
-      ${link("TOP","crumb-top")}${sep}
-      ${link(state.airline,"crumb-airline")}${sep}
-      ${link(state.type,"crumb-type")}${sep}
-      <span class="crumb current">${esc(state.reg)}</span>
-    </nav>`;
+    return `<nav class=breadcrumbs>${link("TOP","crumb-top")}${sep}${link(state.airline,"crumb-airline")}${sep}${link(state.type,"crumb-type")}${sep}<span class="crumb current">${esc(state.reg)}</span></nav>`;
   }
-
   return "";
 }
 
 function controls(){
   return `<div class=toolbar>
+    <span class=reg-label>フリー検索：</span>
+    <input class=search data-free value="${esc(state.freeQ)}" placeholder="航空会社、機種、レジ等で絞り込み">
+  </div>
+  <div class=toolbar>
     <span class=reg-label>レジ検索：JA</span>
     <input class=search data-q value="${esc(state.q)}" inputmode="text" autocomplete="off" placeholder="614A">
     <button class="btn primary" data-a=search>検索</button>
@@ -596,14 +518,13 @@ function card(name,a,attr){
   return `<button class=card ${attr||""}>
     <div class=row><span class=title>${esc(name)}</span><span class=muted>${total}機</span></div>
     <div class=bar><i style="width:${pct(collected,total)}%"></i></div>
-    <span class=count>${collected} / ${total}　${pct(collected,total)}%</span>
+    <span class=count>${collected} / ${total} ${pct(collected,total)}%</span>
   </button>`;
 }
 
 function summary(){
   const active=db.master.filter(p=>p.Status==="Active");
   const [total,collected]=agg(active);
-
   return `<section class=summary>
     <div class=stat><b>${collected}</b><span>COLLECTED</span></div>
     <div class=stat><b>${total}</b><span>ACTIVE AIRCRAFT</span></div>
@@ -614,9 +535,7 @@ function summary(){
 function airlines(){
   const list=filterPlanes(db.master);
   const groups={};
-
   list.forEach(p=>(groups[p.Airline]??=[]).push(p));
-
   return head("","")+summary()+controls()+
     `<h2>航空会社</h2><main class=grid>${
       Object.entries(groups).sort().map(([name,a])=>
@@ -629,9 +548,7 @@ function airlines(){
 function types(){
   const list=filterPlanes(db.master.filter(p=>p.Airline===state.airline));
   const groups={};
-
   list.forEach(p=>(groups[p.ICAO4]??=[]).push(p));
-
   return head("‹ "+state.airline,"機種を選択")+breadcrumbs()+controls()+
     `<main class=grid>${
       Object.entries(groups).sort().map(([name,a])=>
@@ -677,7 +594,6 @@ function detail(){
     String(airportIATA(a)||"").toUpperCase()===
     String(u.airport||"").toUpperCase()
   );
-
   const place=airport?airportLabel(airport):(u.airport||"—");
 
   return head("機体詳細",p.Registration)+breadcrumbs()+
@@ -699,6 +615,7 @@ function detail(){
           ${F.map(k=>`<div class=field><small>${k}</small><div>${esc(p[k]||"—")}</div></div>`).join("")}
           <div class=field><small>撮影地</small><div>${esc(place)}</div></div>
           <div class=field><small>Date Taken</small><div>${esc(u.date||"—")}</div></div>
+          <div class=field style="grid-column:1/-1"><small>メモ</small><div>${esc(u.memo||"—")}</div></div>
         </div>
         <div class=actions>
           <button class="btn primary" data-a=edit>${hasCollection(p)?"撮影情報を編集":"この機体を登録"}</button>
@@ -720,6 +637,7 @@ function modal(){
       <label>Registration<input value="${esc(p.Registration)}" disabled></label>
       <label>撮影地<input id=airport value="${esc(u.airport||"")}" placeholder="例：FUK" autocomplete="off"><div id=airport-results></div></label>
       <label>Date Taken<input id=date type=datetime-local value="${esc(u.date||"")}"></label>
+      <label>メモ (最大200文字)<textarea id=memo maxlength="200" placeholder="例：夕日と絡めて撮影。リンク等" rows="3">${esc(u.memo||"")}</textarea></label>
       <label><button class="btn primary" data-a=photo>${u.photo?"写真を変更":"写真を選ぶ"}</button></label>
       <label><input id=spotted type=checkbox ${u.spotted?"checked":""}> 撮影済み</label>
       <div class=actions>
@@ -733,7 +651,6 @@ function modal(){
 
 function editorView(){
   if(!editor)return "";
-
   return `<div class=photo-editor>
     <div class=photo-editor-head>
       <span class=photo-editor-title>写真を調整</span>
@@ -761,32 +678,23 @@ function editorView(){
   </div>`;
 }
 
-/* -----------------------------
-   Async photo rendering
------------------------------ */
-
 async function refreshPhotoImages(){
   const token=renderToken;
   const images=[...document.querySelectorAll("img[data-photo-reg]")];
-
   await Promise.all(images.map(async img=>{
     const reg=img.dataset.photoReg;
     try{
       const url=await photoURL(reg);
-
       if(token!==renderToken){
         if(url)URL.revokeObjectURL(url);
         return;
       }
-
       if(!url){
         img.removeAttribute("src");
         return;
       }
-
       img.dataset.objectUrl=url;
       img.src=url;
-
       img.onload=()=>{
         const current=img.dataset.objectUrl;
         if(current){
@@ -802,7 +710,6 @@ async function refreshPhotoImages(){
 
 function render(){
   const token=++renderToken;
-
   const content=
     state.page==="airlines"?airlines():
     state.page==="types"?types():
@@ -818,25 +725,17 @@ function render(){
     updateEditorView();
     editorPointerSetup();
   }
-
   refreshPhotoImages().catch(err=>console.error("写真表示処理エラー:",err));
 }
-
-/* -----------------------------
-   Photo editor
------------------------------ */
 
 function editorMetrics(){
   const frame=document.querySelector("#crop-frame");
   if(!frame||!editor)return null;
-
   const fw=frame.clientWidth;
   const fh=frame.clientHeight;
   const w=editor.img.naturalWidth;
   const h=editor.img.naturalHeight;
-
   if(!w||!h)return null;
-
   const rad=Math.abs(editor.angle)*Math.PI/180;
   const c=Math.cos(rad);
   const ss=Math.sin(rad);
@@ -844,7 +743,6 @@ function editorMetrics(){
     fw/(w*c+h*ss),
     fh/(w*ss+h*c)
   );
-
   editor.baseScale=cover;
   return {fw,fh,w,h};
 }
@@ -852,7 +750,6 @@ function editorMetrics(){
 function updateEditorView(){
   const m=editorMetrics();
   if(!m)return;
-
   const img=document.querySelector("#crop-image");
   if(img){
     const scale=editor.baseScale*editor.zoom;
@@ -861,7 +758,6 @@ function updateEditorView(){
     img.style.transform=
       `translate(calc(-50% + ${editor.x}px),calc(-50% + ${editor.y}px)) rotate(${editor.angle}deg)`;
   }
-
   const angle=document.querySelector("#angle-value");
   if(angle)angle.textContent=`${Number(editor.angle).toFixed(1)}°`;
 }
@@ -884,30 +780,23 @@ function closeEditor(){
 
 async function applyEditor(){
   if(!editor)return;
-
   try{
     const m=editorMetrics();
     if(!m)throw new Error("写真エディタの状態を取得できません");
-
     const out=document.createElement("canvas");
     out.width=1200;
     out.height=800;
-
     const ctx=out.getContext("2d");
     if(!ctx)throw new Error("Canvasを利用できません");
-
     const rad=editor.angle*Math.PI/180;
     const sx=editor.baseScale*editor.zoom;
     const px=editor.x/m.fw*1200;
     const py=editor.y/m.fh*800;
-
     ctx.translate(600+px,400+py);
     ctx.rotate(rad);
-
     const outputScale=sx*1200/m.fw;
     ctx.scale(outputScale,outputScale);
     ctx.drawImage(editor.img,-m.w/2,-m.h/2);
-
     const blob=await new Promise((resolve,reject)=>{
       out.toBlob(
         b=>b?resolve(b):reject(new Error("画像データの生成に失敗しました")),
@@ -915,80 +804,51 @@ async function applyEditor(){
         .82
       );
     });
-
     await savePhoto(state.reg,blob);
-
     const u=ensureShot(state.reg);
     u.photo=true;
     u.spotted=true;
     db.shots[state.reg]=u;
-
     if(!saveDatabase())return;
-
     URL.revokeObjectURL(editor.src);
     editor=null;
-
     state.editorReturn=false;
     state.modal=true;
     render();
-
   }catch(err){
     console.error("写真保存エラー:",err);
-    alert(
-      "写真の保存に失敗しました。\n\n"+
-      (err.name||"Error")+"\n"+
-      (err.message||String(err))
-    );
+    alert("写真の保存に失敗しました。\n\n"+(err.name||"Error")+"\n"+(err.message||String(err)));
   }
 }
 
 function editorPointerSetup(){
   const frame=document.querySelector("#crop-frame");
   if(!frame||!editor)return;
-
   let drag=null;
   let pinch=null;
-
   frame.addEventListener("pointerdown",e=>{
     frame.setPointerCapture(e.pointerId);
-    drag={
-      id:e.pointerId,
-      x:e.clientX,
-      y:e.clientY,
-      ox:editor.x,
-      oy:editor.y
-    };
+    drag={id:e.pointerId,x:e.clientX,y:e.clientY,ox:editor.x,oy:editor.y};
   });
-
   frame.addEventListener("pointermove",e=>{
     if(!drag||drag.id!==e.pointerId)return;
     editor.x=drag.ox+e.clientX-drag.x;
     editor.y=drag.oy+e.clientY-drag.y;
     updateEditorView();
   });
-
   frame.addEventListener("pointerup",()=>{drag=null;});
   frame.addEventListener("pointercancel",()=>{drag=null;});
-
   frame.addEventListener("wheel",e=>{
     e.preventDefault();
-    editor.zoom=Math.max(
-      1,
-      Math.min(5,editor.zoom*(e.deltaY<0?1.08:.92))
-    );
+    editor.zoom=Math.max(1,Math.min(5,editor.zoom*(e.deltaY<0?1.08:.92)));
     updateEditorView();
   },{passive:false});
-
   frame.addEventListener("touchstart",e=>{
     if(e.touches.length===2){
       const a=e.touches[0],b=e.touches[1];
-      pinch={
-        dist:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),
-        zoom:editor.zoom
-      };
+      pinch={dist:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),zoom:editor.zoom};
     }
   },{passive:true});
-
   frame.addEventListener("touchmove",e=>{
     if(e.touches.length===2&&pinch){
       e.preventDefault();
@@ -998,72 +858,39 @@ function editorPointerSetup(){
       updateEditorView();
     }
   },{passive:false});
-
-  frame.addEventListener("touchend",e=>{
-    if(e.touches.length<2)pinch=null;
-  });
+  frame.addEventListener("touchend",e=>{if(e.touches.length<2)pinch=null;});
 }
-
-/* -----------------------------
-   EXIF
------------------------------ */
 
 async function exifDate(file){
   try{
     const b=await file.arrayBuffer();
     const v=new DataView(b);
-
     if(v.byteLength<2||v.getUint16(0,false)!==0xFFD8)return "";
-
     let p=2;
-
     while(p+4<=v.byteLength){
-      if(v.getUint8(p)!==0xFF){
-        p++;
-        continue;
-      }
-
+      if(v.getUint8(p)!==0xFF){p++;continue;}
       const marker=v.getUint8(p+1);
       p+=2;
-
       if(marker===0xDA||marker===0xD9)break;
       if(p+2>v.byteLength)break;
-
       const len=v.getUint16(p,false);
       if(len<2||p+len>v.byteLength)break;
-
       if(marker===0xE1&&len>=10){
         const ex=p+2;
-
-        if(
-          v.getUint8(ex)===0x45&&
-          v.getUint8(ex+1)===0x78&&
-          v.getUint8(ex+2)===0x69&&
-          v.getUint8(ex+3)===0x66&&
-          v.getUint8(ex+4)===0&&
-          v.getUint8(ex+5)===0
-        ){
+        if(v.getUint8(ex)===0x45&&v.getUint8(ex+1)===0x78&&v.getUint8(ex+2)===0x69&&v.getUint8(ex+3)===0x66&&v.getUint8(ex+4)===0&&v.getUint8(ex+5)===0){
           const t=ex+6;
-
           if(t+8<=v.byteLength){
             const endian=v.getUint16(t,false);
             const little=endian===0x4949;
-
             if(endian===0x4949||endian===0x4D4D){
               const u16=o=>v.getUint16(o,little);
               const u32=o=>v.getUint32(o,little);
-
-              const typeSize={
-                1:1,2:1,3:2,4:4,5:8,6:1,7:1,
-                8:2,9:4,10:8,11:4,12:8
-              };
-
+              const typeSize={1:1,2:1,3:2,4:4,5:8,6:1,7:1,8:2,9:4,10:8,11:4,12:8};
               const readAscii=(entry,type,count)=>{
                 if(type!==2||count<=0||count>4096)return "";
                 const bytes=count;
                 const pos=bytes<=4?entry+8:t+u32(entry+8);
                 if(pos<0||pos+bytes>v.byteLength)return "";
-
                 let out="";
                 for(let i=0;i<count;i++){
                   const c=v.getUint8(pos+i);
@@ -1072,147 +899,82 @@ async function exifDate(file){
                 }
                 return out;
               };
-
               const visited=new Set();
               const queue=[];
-
               const addIFD=o=>{
-                if(
-                  Number.isInteger(o)&&
-                  o>0&&
-                  o<v.byteLength-t&&
-                  !visited.has(o)
-                ){
+                if(Number.isInteger(o)&&o>0&&o<v.byteLength-t&&!visited.has(o)){
                   visited.add(o);
                   queue.push(o);
                 }
               };
-
               if(u16(t+2)===42)addIFD(u32(t+4));
-
-              let original="";
-              let digitized="";
-              let ifd0date="";
-
+              let original="",digitized="",ifd0date="";
               while(queue.length){
                 const off=queue.shift();
                 const base=t+off;
-
                 if(base+2>v.byteLength)continue;
-
                 const n=u16(base);
                 if(n>4096||base+2+n*12+4>v.byteLength)continue;
-
                 for(let i=0;i<n;i++){
                   const e=base+2+i*12;
                   const tag=u16(e);
                   const type=u16(e+2);
                   const count=u32(e+4);
-
                   const size=(typeSize[type]||0)*count;
-
                   if(size<0)continue;
-
                   if(tag===0x9003||tag===0x9004||tag===0x0132){
                     const val=readAscii(e,type,count);
-
                     if(/^\d{4}:\d{2}:\d{2}[ T]\d{2}:\d{2}/.test(val)){
                       if(tag===0x9003&&!original)original=val;
                       else if(tag===0x9004&&!digitized)digitized=val;
                       else if(tag===0x0132&&!ifd0date)ifd0date=val;
                     }
                   }
-
-                  if(
-                    (tag===0x8769||tag===0x8825||tag===0xA005)&&
-                    type===4&&count===1
-                  ){
-                    addIFD(u32(e+8));
-                  }
-
-                  if(
-                    (tag===0x8769||tag===0x8825||tag===0xA005)&&
-                    type===3&&count===1
-                  ){
-                    addIFD(u16(e+8));
-                  }
+                  if((tag===0x8769||tag===0x8825||tag===0xA005)&&type===4&&count===1)addIFD(u32(e+8));
+                  if((tag===0x8769||tag===0x8825||tag===0xA005)&&type===3&&count===1)addIFD(u16(e+8));
                 }
-
                 const nextPos=base+2+n*12;
                 if(nextPos+4<=v.byteLength)addIFD(u32(nextPos));
               }
-
               const raw=original||digitized||ifd0date;
-              const m=raw.match(
-                /^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/
-              );
-
-              if(m){
-                return `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}${m[6]?":"+m[6]:""}`;
-              }
+              const m=raw.match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+              if(m)return `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}${m[6]?":"+m[6]:""}`;
             }
           }
         }
       }
-
       p+=len;
     }
   }catch(err){
     console.error("EXIF読み込みエラー:",err);
   }
-
   return "";
 }
-
-/* -----------------------------
-   DOM event handlers
------------------------------ */
 
 app.addEventListener("click",async e=>{
   const button=e.target.closest("button");
   if(!button)return;
-
   const action=button.dataset.a;
 
   if(button.dataset.reg){
     const reg=button.dataset.reg;
     const p=db.master.find(x=>x.Registration===reg);
     if(p){
-      nav({
-        airline:p.Airline,
-        type:p.ICAO4,
-        page:"detail",
-        reg
-      });
+      nav({airline:p.Airline,type:p.ICAO4,page:"detail",reg});
     }
     return;
   }
-
   if(button.dataset.air){
-    nav({
-      airline:button.dataset.air,
-      type:"",
-      reg:"",
-      page:"types"
-    });
+    nav({airline:button.dataset.air,type:"",reg:"",page:"types"});
     return;
   }
-
   if(button.dataset.type){
-    nav({
-      type:button.dataset.type,
-      reg:"",
-      page:"planes"
-    });
+    nav({type:button.dataset.type,reg:"",page:"planes"});
     return;
   }
-
   if(button.dataset.airport){
     const code=String(button.dataset.airport).toUpperCase();
-    const x=db.airports.find(a=>
-      String(airportIATA(a)||"").toUpperCase()===code
-    );
-
+    const x=db.airports.find(a=>String(airportIATA(a)||"").toUpperCase()===code);
     if(x&&document.querySelector("#airport")){
       document.querySelector("#airport").value=airportIATA(x)||"";
       document.querySelector("#airport-results").innerHTML="";
@@ -1223,109 +985,53 @@ app.addEventListener("click",async e=>{
   if(action==="search"){
     const q=document.querySelector("[data-q]")?.value.trim().toUpperCase()||"";
     state.q=q;
-
-    const hit=db.master.find(p=>
-      String(p.Registration||"").toUpperCase()==="JA"+q
-    );
-
+    const hit=db.master.find(p=>String(p.Registration||"").toUpperCase()==="JA"+q);
     if(hit){
-      nav({
-        reg:hit.Registration,
-        airline:hit.Airline,
-        type:hit.ICAO4,
-        page:"detail"
-      });
+      nav({reg:hit.Registration,airline:hit.Airline,type:hit.ICAO4,page:"detail"});
       return;
     }
   }
-  else if(action==="menu"){
-    state.menu=!state.menu;
-  }
-  else if(action==="import-aircraft"){
-    csv.click();
-    return;
-  }
-  else if(action==="import-airport"){
-    airportCsv.click();
-    return;
-  }
-  else if(action==="export"){
-    exportCSV();
-    return;
-  }
-  else if(action==="backup"){
-    await backupJSON();
-    return;
-  }
-  else if(action==="restore"){
-    json.click();
-    return;
-  }
-  else if(action==="crumb-top"){
-    topNav();
-    return;
-  }
-  else if(action==="crumb-airline"){
-    nav({page:"types",airline:state.airline,type:"",reg:""});
-    return;
-  }
-  else if(action==="crumb-type"){
-    nav({page:"planes",airline:state.airline,type:state.type,reg:""});
-    return;
-  }
-  else if(action==="editor-cancel"){
-    closeEditor();
-    return;
-  }
-  else if(action==="editor-reset"){
-    editorReset();
-    return;
-  }
-  else if(action==="editor-apply"){
-    await applyEditor();
-    return;
-  }
-  else if(action==="edit"){
-    state.modal=true;
-  }
-  else if(action==="close"){
-    state.modal=false;
-  }
+  else if(action==="menu"){ state.menu=!state.menu; }
+  else if(action==="import-aircraft"){ csv.click(); return; }
+  else if(action==="import-airport"){ airportCsv.click(); return; }
+  else if(action==="export"){ exportCSV(); return; }
+  else if(action==="backup"){ await backupJSON(); return; }
+  else if(action==="restore"){ json.click(); return; }
+  else if(action==="crumb-top"){ topNav(); return; }
+  else if(action==="crumb-airline"){ nav({page:"types",airline:state.airline,type:"",reg:""}); return; }
+  else if(action==="crumb-type"){ nav({page:"planes",airline:state.airline,type:state.type,reg:""}); return; }
+  else if(action==="editor-cancel"){ closeEditor(); return; }
+  else if(action==="editor-reset"){ editorReset(); return; }
+  else if(action==="editor-apply"){ await applyEditor(); return; }
+  else if(action==="edit"){ state.modal=true; }
+  else if(action==="close"){ state.modal=false; }
   else if(action==="clear-shot-data"){
     const reg=state.reg;
-
-    if(!confirm("撮影済み・撮影地・撮影日時を一括削除しますか？\\n\\n写真本体は削除されません。")){
-      return;
-    }
-
+    if(!confirm("撮影済み・撮影地・撮影日時・メモを一括削除しますか？\n\n写真本体は削除されません。"))return;
     if(db.shots[reg]){
       delete db.shots[reg].spotted;
       delete db.shots[reg].airport;
       delete db.shots[reg].date;
-
-      if(!db.shots[reg].photo && !Object.keys(db.shots[reg]).length){
-        delete db.shots[reg];
-      }
+      delete db.shots[reg].memo;
+      if(!db.shots[reg].photo && !Object.keys(db.shots[reg]).length)delete db.shots[reg];
     }
-
     saveDatabase();
     state.modal=false;
     render();
     return;
   }
-  else if(action==="photo"){
-    photo.click();
-    return;
-  }
+  else if(action==="photo"){ photo.click(); return; }
   else if(action==="save"){
     const u=ensureShot(state.reg);
     const airportInput=document.querySelector("#airport");
     const dateInput=document.querySelector("#date");
     const spottedInput=document.querySelector("#spotted");
+    const memoInput=document.querySelector("#memo");
 
     u.airport=airportInput?.value||"";
     u.date=dateInput?.value||"";
     u.spotted=!!(spottedInput?.checked||u.photo);
+    u.memo=memoInput?.value||"";
 
     db.shots[state.reg]=u;
     saveDatabase();
@@ -1333,50 +1039,34 @@ app.addEventListener("click",async e=>{
   }
   else if(action==="del"){
     const reg=state.reg;
-
     try{
       await deletePhoto(reg);
-
       if(db.shots[reg]){
         delete db.shots[reg].photo;
-
-        if(!db.shots[reg].spotted &&
-           !db.shots[reg].airport &&
-           !db.shots[reg].date){
-          delete db.shots[reg];
-        }
+        if(!db.shots[reg].spotted && !db.shots[reg].airport && !db.shots[reg].date && !db.shots[reg].memo)delete db.shots[reg];
       }
-
       saveDatabase();
       render();
     }catch(err){
       console.error("写真削除エラー:",err);
-      alert(
-        "写真の削除に失敗しました。\n\n"+
-        (err.name||"Error")+"\n"+
-        (err.message||String(err))
-      );
+      alert("写真の削除に失敗しました。\n\n"+(err.name||"Error")+"\n"+(err.message||String(err)));
     }
     return;
   }
   else if(button.dataset.f){
     const f=button.dataset.f;
-
     if(f==="all"){
       state.filter=["all"];
     }else{
       state.filter=state.filter.filter(x=>x!=="all");
-
       if(state.filter.includes(f)){
         state.filter=state.filter.filter(x=>x!==f);
       }else{
         state.filter.push(f);
       }
-
       if(!state.filter.length)state.filter=["all"];
     }
   }
-
   render();
 });
 
@@ -1386,186 +1076,103 @@ app.addEventListener("input",e=>{
     updateEditorView();
     return;
   }
-
+  if(e.target.dataset.free!==undefined){
+    state.freeQ=e.target.value;
+    render();
+    return;
+  }
   if(e.target.id==="airport"){
     const q=e.target.value.toUpperCase();
     e.target.value=q;
-
     const box=document.querySelector("#airport-results");
     if(!box)return;
-
     const hits=airportHits(q);
-
     box.innerHTML=hits.length?
       hits.map(a=>`<button type="button" class="airport-candidate" data-airport="${esc(airportIATA(a)||"")}">
         <b>${esc(airportName(a))}</b>
         <span>${esc(airportIATA(a)||"")}/${esc(airportICAO(a)||"")}</span>
       </button>`).join(""):
       `<div class="empty">該当する空港がありません</div>`;
-
     return;
   }
-
   if(!e.target.dataset.q)return;
-
   state.q=e.target.value.toUpperCase();
-
   const q=state.q.trim();
   const box=document.querySelector("#search-results");
   if(!box)return;
-
-  if(!q){
-    box.innerHTML="";
-    return;
-  }
-
-  const hits=db.master.filter(p=>
-    String(p.Registration||"").toUpperCase().startsWith("JA"+q)
-  ).slice(0,12);
-
+  if(!q){box.innerHTML="";return;}
+  const hits=db.master.filter(p=>String(p.Registration||"").toUpperCase().startsWith("JA"+q)).slice(0,12);
   box.innerHTML=hits.length?
-    `<div class=search-candidates>${
-      hits.map(p=>`<button class=candidate data-reg="${esc(p.Registration)}">
-        <b>${esc(p.Registration)}</b>
-        <span>${esc(p.Airline)} · ${esc(p.ICAO4)}</span>
-      </button>`).join("")
-    }</div>`:
+    `<div class=search-candidates>${hits.map(p=>`<button class=candidate data-reg="${esc(p.Registration)}"><b>${esc(p.Registration)}</b><span>${esc(p.Airline)} · ${esc(p.ICAO4)}</span></button>`).join("")}</div>`:
     `<div class="empty">該当するレジ番がありません</div>`;
 });
 
 app.addEventListener("keydown",e=>{
   if(e.target.dataset.q&&e.key==="Enter"){
     e.preventDefault();
-
     const q=e.target.value.trim().toUpperCase();
-    const hit=db.master.find(p=>
-      String(p.Registration||"").toUpperCase()==="JA"+q
-    );
-
+    const hit=db.master.find(p=>String(p.Registration||"").toUpperCase()==="JA"+q);
     if(hit){
-      nav({
-        reg:hit.Registration,
-        airline:hit.Airline,
-        type:hit.ICAO4,
-        page:"detail"
-      });
+      nav({reg:hit.Registration,airline:hit.Airline,type:hit.ICAO4,page:"detail"});
     }
   }
 });
 
-/* -----------------------------
-   File inputs
------------------------------ */
-
 csv.addEventListener("change",async e=>{
   const f=e.target.files?.[0];
   if(!f)return;
-
   try{
     const rows=parseCSV(await f.text());
     const header=rows.shift()||[];
-
-    db.master=rows
-      .map(r=>Object.fromEntries(
-        header.map((k,i)=>[k,(r[i]||"").trim()])
-      ))
-      .filter(p=>p.Registration);
-
+    db.master=rows.map(r=>Object.fromEntries(header.map((k,i)=>[k,(r[i]||"").trim()]))).filter(p=>p.Registration);
     saveDatabase();
-
-    state={
-      ...state,
-      page:"airlines",
-      q:"",
-      filter:["active"],
-      menu:false
-    };
-
+    state={...state,page:"airlines",q:"",freeQ:"",filter:["active"],menu:false};
     render();
   }catch(err){
     console.error("機体CSV読込エラー:",err);
     alert("機体CSVを読み込めませんでした");
-  }finally{
-    e.target.value="";
-  }
+  }finally{e.target.value="";}
 });
 
 airportCsv.addEventListener("change",async e=>{
   const f=e.target.files?.[0];
   if(!f)return;
-
   try{
     const rows=parseCSV(await f.text());
     const header=(rows.shift()||[]).map(x=>x.trim());
-
-    db.airports=rows
-      .map(r=>Object.fromEntries(
-        header.map((k,i)=>[k,(r[i]||"").trim()])
-      ))
-      .filter(a=>airportIATA(a)||airportICAO(a)||airportName(a));
-
+    db.airports=rows.map(r=>Object.fromEntries(header.map((k,i)=>[k,(r[i]||"").trim()]))).filter(a=>airportIATA(a)||airportICAO(a)||airportName(a));
     saveDatabase();
     render();
   }catch(err){
     console.error("空港CSV読込エラー:",err);
     alert("空港CSVを読み込めませんでした");
-  }finally{
-    e.target.value="";
-  }
+  }finally{e.target.value="";}
 });
 
 photo.addEventListener("change",async e=>{
   const f=e.target.files?.[0];
   if(!f)return;
-
   let url="";
-
   try{
     url=URL.createObjectURL(f);
-
     const img=new Image();
-
-    await new Promise((resolve,reject)=>{
-      img.onload=resolve;
-      img.onerror=reject;
-      img.src=url;
-    });
-
+    await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url;});
     const p=db.master.find(x=>x.Registration===state.reg);
     if(!p)throw new Error("対象の機体が見つかりません");
-
     const u=ensureShot(state.reg);
     const exif=await exifDate(f);
-
     if(exif){
       u.date=exif;
     }else{
       const name=f.name||"";
       const m=name.match(/(?:^|_)(20\d{6})[_-](\d{6})(?:[_-]|\.|$)/);
-
       if(m){
-        u.date=
-          `${m[1].slice(0,4)}-${m[1].slice(4,6)}-${m[1].slice(6,8)}`+
-          `T${m[2].slice(0,2)}:${m[2].slice(2,4)}:${m[2].slice(4,6)}`;
+        u.date=`${m[1].slice(0,4)}-${m[1].slice(4,6)}-${m[1].slice(6,8)}T${m[2].slice(0,2)}:${m[2].slice(2,4)}:${m[2].slice(4,6)}`;
       }
     }
-
-    editor={
-      file:f,
-      src:url,
-      img,
-      u,
-      angle:0,
-      zoom:1,
-      x:0,
-      y:0,
-      baseScale:1
-    };
-
+    editor={file:f,src:url,img,u,angle:0,zoom:1,x:0,y:0,baseScale:1};
     state.editorReturn=true;
     render();
-
-    // Ownership of url is transferred to editor.
     url="";
   }catch(err){
     console.error("画像読み込みエラー:",err);
@@ -1579,79 +1186,46 @@ photo.addEventListener("change",async e=>{
 json.addEventListener("change",async e=>{
   const f=e.target.files?.[0];
   if(!f)return;
-
   try{
     const parsed=JSON.parse(await f.text());
-
     if(!parsed||typeof parsed!=="object")throw new Error("不正なJSONです");
-
-    // New complete backup format.
-    if(
-      parsed.format==="regi-atsume-backup" &&
-      parsed.data &&
-      typeof parsed.data==="object" &&
-      Array.isArray(parsed.photos)
-    ){
+    if(parsed.format==="regi-atsume-backup"&&parsed.data&&typeof parsed.data==="object"&&Array.isArray(parsed.photos)){
       const restored=parsed.data;
-
       if(!Array.isArray(restored.master))restored.master=[];
       if(!Array.isArray(restored.airports))restored.airports=[];
       if(!restored.shots||typeof restored.shots!=="object")restored.shots={};
-
       await clearAllPhotos();
       await restorePhotos(parsed.photos);
-
       db=restored;
-
-      // Photo presence is determined by the restored IndexedDB records.
       for(const reg of Object.keys(db.shots)){
-        if(db.shots[reg] && typeof db.shots[reg]==="object"){
-          delete db.shots[reg].photo;
-        }
+        if(db.shots[reg]&&typeof db.shots[reg]==="object")delete db.shots[reg].photo;
       }
-
       for(const item of parsed.photos){
         const reg=String(item?.reg||"");
         if(!reg)continue;
-
         const u=ensureShot(reg);
         u.photo=true;
         u.spotted=true;
       }
-
       stripLegacyPhotoData();
       saveDatabase();
       render();
       alert("写真を含むバックアップを復元しました。");
       return;
     }
-
-    // Backward-compatible metadata-only JSON restore.
     db=parsed.data&&typeof parsed.data==="object"?parsed.data:parsed;
-
     if(!Array.isArray(db.master))db.master=[];
     if(!Array.isArray(db.airports))db.airports=[];
     if(!db.shots||typeof db.shots!=="object")db.shots={};
-
     stripLegacyPhotoData();
     saveDatabase();
     render();
-    alert("JSONデータを復元しました。\\n\\nこのJSONには写真が含まれていないため、既存の写真は変更していません。");
+    alert("JSONデータを復元しました。");
   }catch(err){
     console.error("JSON復元エラー:",err);
-    alert(
-      "バックアップJSONを復元できませんでした。\\n\\n"+
-      (err.name||"Error")+"\\n"+
-      (err.message||String(err))
-    );
-  }finally{
-    e.target.value="";
-  }
+    alert("バックアップJSONを復元できませんでした。\n\n"+(err.name||"Error")+"\n"+(err.message||String(err)));
+  }finally{e.target.value="";}
 });
-
-/* -----------------------------
-   Startup
------------------------------ */
 
 render();
 
@@ -1661,6 +1235,5 @@ if("serviceWorker" in navigator){
   });
 }
 </script>
-
 </body>
 </html>
