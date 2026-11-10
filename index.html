@@ -99,7 +99,7 @@
     .filter-btn.active { background: var(--accent-purple); color: #fff; border-color: var(--accent-purple); }
 
     /* パンくずリスト（レジカード一覧のすぐ上） */
-    .nav-bar { display: flex; align-items: center; gap: 6px; font-size: 1.5rem; color: var(--text-sub); margin-bottom: 8px; overflow-x: auto; white-space: nowrap; padding: 6px 0; }
+    .nav-bar { display: flex; align-items: center; gap: 6px; font-size: 1.2rem; color: var(--text-sub); margin-bottom: 8px; overflow-x: auto; white-space: nowrap; padding: 6px 0; }
     .nav-item { cursor: pointer; font-weight: 600; flex-shrink: 0; }
     .nav-item.active { color: var(--text-main); font-weight: 700; }
     .nav-arrow { font-size: 0.8rem; color: #52525b; flex-shrink: 0; }
@@ -163,7 +163,7 @@
     }
     .folder-title-code {
       font-weight: 900;
-      font-size: 20px;
+      font-size: 24px;
       letter-spacing: -0.5px;
     }
 
@@ -328,7 +328,7 @@
           <span>メモ</span>
           <span id="memo-counter" style="color:var(--text-sub); font-size:0.75rem;">0 / 64文字</span>
         </label>
-        <textarea class="form-input" id="modal-memo" maxlength="64" placeholder="例: 特別塗装、レドーム等"></textarea>
+        <textarea class="form-input" id="modal-memo" maxlength="60" placeholder="例: 特別塗装、レドーム等"></textarea>
       </div>
       
       <div class="btn-group">
@@ -815,7 +815,7 @@
         </div>
       `;
 
-      const liveryDisplay = hasLivery ? `<span class="livery-text" style="font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70px;">${item.liveryName || 'Livery'}</span>` : '<span></span>';
+      const liveryDisplay = hasLivery ? `<span class="livery-text" style="font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70px;">Livery</span>` : '<span></span>';
       const flyteamHtml = hasUrl ? `<a href="${u.url}" target="_blank" onclick="event.stopPropagation();" class="flyteam-badge">FlyTeam</a>` : '<span></span>';
       
       const bottomHtml = `
@@ -876,7 +876,7 @@
     };
 
     function updateMemoCounter(len) {
-      document.getElementById('memo-counter').innerText = `${len} / 64文字`;
+      document.getElementById('memo-counter').innerText = `${len} / 60文字`;
     }
 
     document.getElementById('modal-reset').onclick = () => {
